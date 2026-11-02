@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<title>StandRocket Online</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0c12;font-family:Arial Black,sans-serif;touch-action:manipulation}
+body{display:flex;justify-content:center;align-items:center;position:fixed;top:0;left:0;right:0;bottom:0}
+#app{width:100%;height:100%;background:linear-gradient(145deg,#1a1208,#2a1a0a);display:flex;flex-direction:column;position:relative;overflow:hidden}
+#loadingScreen,#loginScreen{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:18px;z-index:1000;background:linear-gradient(145deg,#1a1208,#2a1a0a)}
+#loginScreen{display:none;z-index:900}
+#loadingScreen h1{font-size:52px;color:#ff8800;text-shadow:0 0 40px #ff8800aa;letter-spacing:4px;text-align:center}
+#loadingScreen h1 .version{display:block;font-size:20px;color:#ffaa44;letter-spacing:6px;margin-top:4px}
+.loader-bar-bg{width:50%;min-width:280px;height:14px;background:#2a1a0a;border-radius:20px;overflow:hidden;border:2px solid #8a5a1a}
+.loader-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#ff8800,#ffcc00,#ff8800);border-radius:20px;transition:width .3s ease}
+#loadingPercent{font-size:28px;color:#ffaa44;font-family:Courier New,monospace}
+#loadingText{font-size:16px;color:#ff8844;font-family:Courier New,monospace;opacity:.7}
+#loginScreen h2{color:#ffaa44;font-size:30px;letter-spacing:2px;margin-bottom:10px}
+.login-btn{width:45%;min-width:300px;max-width:450px;padding:16px 0;border:none;border-radius:60px;font-size:19px;font-weight:bold;font-family:Arial Black,sans-serif;cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,.4)}
+.btn-google{background:#2a1a0a;color:#ff8844;border:2px solid #8a5a1a;opacity:.75; display:flex; align-items:center; justify-content:center; gap:10px;}
+.btn-google:hover{opacity:1;}
+#soonMessage{color:#ff8800;font-size:17px;font-weight:bold;min-height:26px;font-family:Courier New,monospace; text-align:center;}
+#gameLayout{display:none;width:100%;height:100%;flex-direction:row;position:relative;overflow:hidden}
+#playerTopBar{position:absolute;top:0;left:70px;right:0;height:76px;display:flex;align-items:center;padding:6px 14px;gap:12px;background:linear-gradient(180deg,rgba(26,18,8,.98),rgba(26,18,8,.75));border-bottom:2px solid #8a5a1a;z-index:50}
+.player-avatar-box{cursor:pointer;flex-shrink:0}
+.player-avatar-box img{width:56px;height:56px;border-radius:50%;border:none;object-fit:cover;background:#1a1208}
+.player-info-block{display:flex;flex-direction:column;gap:1px;min-width:0}
+.player-info-row{display:flex;align-items:center;gap:6px}
+.id-text{color:#88aacc;font-size:12px;font-weight:bold;font-family:Courier New,monospace}
+.nick-text{color:#fff;font-size:16px;font-weight:bold;font-family:Arial Black,sans-serif;cursor:pointer}
+.level-text-top{color:#ffaa44;font-size:12px;font-weight:bold;font-family:Courier New,monospace}
+.xp-bar-top{width:160px;height:7px;background:#0a0e1a;border-radius:10px;overflow:hidden;margin-top:2px}
+.xp-bar-top-fill{height:100%;width:0%;background:linear-gradient(90deg,#ff8800,#ffcc00,#ff8800);border-radius:10px;transition:width .4s ease}
+.player-right-stats{margin-left:auto;display:flex;gap:12px;align-items:center}
+.stat-pill{display:flex;align-items:center;gap:4px;padding:4px 12px;border-radius:30px}
+.stat-pill.coins{background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.2)}
+.stat-pill.coins .coin-text{color:#ffd700;font-size:14px;font-weight:bold;font-family:Courier New,monospace}
+.stat-pill.diamond{background:rgba(68,221,255,.08);border:1px solid rgba(68,221,255,.2)}
+.stat-pill.diamond .diamond-text{color:#44ddff;font-size:14px;font-weight:bold;font-family:Courier New,monospace}
+#sideBar{width:70px;height:100%;background:linear-gradient(180deg,#1a1208,#0a0c12);border-right:2px solid #8a5a1a;display:flex;flex-direction:column;padding:8px 0;gap:6px;z-index:100;flex-shrink:0;align-items:center}
+.side-icon{width:54px;height:54px;display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;border-radius:14px;background:rgba(26,18,8,.4);border:1px solid transparent;color:#888;flex-shrink:0}
+.side-icon.active{background:linear-gradient(145deg,#ff8800,#cc6600);border:1px solid #ffaa44;box-shadow:0 0 20px #ff880088;color:#fff}
+#contentArea{flex:1;position:relative;overflow:hidden}
+.menu-window{display:none;position:absolute;top:76px;left:0;right:0;bottom:0;padding:14px;overflow-y:auto}
+.menu-window.active{display:block}
+.window-title{color:#ff8800;font-size:22px;font-weight:bold;font-family:Arial Black,sans-serif;letter-spacing:2px;margin-bottom:12px;border-bottom:2px solid #8a5a1a;padding-bottom:6px}
+</style>
+</head>
+<body>
+<div id="app">
+    <div id="loadingScreen">
+        <h1 id="loadingTitle">StandRocket<span class="version" id="versionLoading">Online</span></h1>
+        <div class="loader-bar-bg"><div class="loader-bar-fill" id="loaderFill"></div></div>
+        <div id="loadingPercent">0%</div>
+        <div id="loadingText">Загрузка...</div>
+    </div>
+    <div id="loginScreen">
+        <h2>🚀 ДОБРО ПОЖАЛОВАТЬ</h2>
+        <button class="login-btn btn-google" id="googleBtn">🔵 Войти через Google</button>
+        <div id="soonMessage"></div>
+    </div>
+        <!-- ИГРОВОЙ ИНТЕРФЕЙС -->
+    <div id="gameLayout">
+        <div id="sideBar">
+            <div class="side-icon top-icon active" data-window="homeWindow" title="Главное">▶️</div>
+            <div class="side-icon" data-window="inventoryWindow" title="Инвентарь">🔫</div>
+            <div class="side-icon" data-window="shopWindow" title="Магазин">🪙</div>
+            <div class="side-icon" data-window="marketWindow" title="Рынок">🛒</div>
+            <div class="side-icon" data-window="clansWindow" title="Кланы">👫</div>
+            <div class="side-icon bottom-icon" data-window="settingsWindow" title="Настройки">⚙️</div>
+        </div>
+        
+        <div id="playerTopBar">
+            <div class="player-avatar-box" id="avatarContainer">
+                <img id="playerAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231a1208' stroke='%23ff8800' stroke-width='3'/%3E%3Ctext x='50' y='55' font-size='40' text-anchor='middle' fill='%23ff8800' font-family='Arial'%3E👤%3C/text%3E%3C/svg%3E" alt="Avatar">
+            </div>
+            <div class="player-info-block">
+                <div class="player-info-row">
+                    <span style="color:#88aacc; font-size:10px;">🆔</span>
+                    <span class="id-text" id="idDisplay">Загрузка...</span>
+                </div>
+                <div class="player-info-row">
+                    <span class="nick-text" id="nickDisplay">Игрок</span>
+                </div>
+                <div class="player-info-row">
+                    <span class="level-text-top" id="levelDisplay">Ур. 1</span>
+                    <span style="color:#6a7a8a; font-size:9px;">·</span>
+                    <span class="level-text-top" id="xpDisplay">0 / 100 XP</span>
+                </div>
+                <div class="xp-bar-top"><div class="xp-bar-top-fill" id="xpBarFill"></div></div>
+            </div>
+            <div class="player-right-stats">
+                <div class="stat-pill diamond">
+                    <span style="font-size:13px;">💎</span>
+                    <span class="diamond-text" id="diamondsDisplay">0</span>
+                </div>
+                <div class="stat-pill coins">
+                    <span style="font-size:13px;">🪙</span>
+                    <span class="coin-text" id="coinsDisplay">100</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="contentArea">
+            <!-- ГЛАВНОЕ ОКНО -->
+            <div class="menu-window active" id="homeWindow">
+                <div class="main-menu-grid">
+                    <div class="ranks-block" style="background:#0a0c12; border:1px solid #2a2a2a; border-radius:14px; padding:12px 14px;">
+                        <div class="ranks-block-title" style="color:#888; font-size:11px; font-family:'Courier New',monospace; letter-spacing:1.5px; margin-bottom:8px;">🏆 РАНГ</div>
+                        <div class="rank-single" style="display:flex; align-items:center; gap:14px;">
+                            <div class="rank-icon-circle calibration" id="rankIconCircle" style="width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;background:#000;border:3px solid #333;">🔒</div>
+                            <div class="rank-single-info" style="flex:1;">
+                                <div class="rank-single-name" id="rankSingleName" style="color:#ff8800;font-size:18px;font-weight:bold;">Калибровка</div>
+                                <div class="rank-single-sub" id="rankSingleSub" style="color:#ffaa44;font-size:12px;font-family:'Courier New',monospace;">Сколько сыграно: 0/10</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quick-actions" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;">
+                        <div class="quick-btn" id="profileBtn" style="background:rgba(26,18,8,.7);border:2px solid #8a5a1a;border-radius:14px;padding:12px 6px;text-align:center;cursor:pointer;color:#ffaa44;font-size:12px;font-weight:bold;">👤<br>Профиль</div>
+                        <div class="quick-btn" id="leadersBtn" style="background:rgba(26,18,8,.7);border:2px solid #8a5a1a;border-radius:14px;padding:12px 6px;text-align:center;cursor:pointer;color:#ffaa44;font-size:12px;font-weight:bold;">🏆<br>Лидеры</div>
+                        <div class="quick-btn" id="achievementsBtn" style="background:rgba(26,18,8,.7);border:2px solid #8a5a1a;border-radius:14px;padding:12px 6px;text-align:center;cursor:pointer;color:#ffaa44;font-size:12px;font-weight:bold;">📝<br>Достижения</div>
+                    </div>
+                    <div class="play-btn-area" style="margin-top:20px; display:flex; justify-content:center;">
+                        <button class="play-btn" id="playBtn" style="width:100%;max-width:380px;padding:14px 0;background:linear-gradient(145deg,#44dd44,#22aa22);color:#fff;font-size:22px;font-family:'Arial Black',sans-serif;letter-spacing:3px;font-weight:bold;border:3px solid #88ff88;border-radius:14px;cursor:pointer;box-shadow:0 6px 0 #116611;">ИГРАТЬ</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ОКНО РЕЖИМОВ -->
+            <div class="menu-window" id="modesWindow">
+                <div class="window-title">⚔️ Режимы</div>
+                <div class="modes-grid" style="display:flex;flex-direction:column;gap:14px;align-items:center;">
+                    <div class="mode-card" id="rankedModeCard" style="width:100%;max-width:500px;background:linear-gradient(145deg,#1a1208,#0e0a06);border:2px solid #ff8800;border-radius:16px;padding:16px;text-align:center;cursor:pointer;">
+                        <div class="mode-title" style="color:#ff8800;font-size:18px;font-weight:bold;">🏆 РАНГОВЫЙ БОЙ</div>
+                        <div class="mode-sub" style="color:#ff8844;font-size:12px;font-family:'Courier New',monospace;margin-top:4px;">Дуэли с реальными игроками</div>
+                    </div>
+                    <button class="fight-btn" id="rankedFightBtn" style="padding:12px 36px;border:none;border-radius:14px;background:linear-gradient(145deg,#ffd700,#ffaa00);color:#1a1a1a;font-weight:bold;font-size:16px;margin-top:10px;">🏆 НАЧАТЬ БОЙ!</button>
+                </div>
+            </div>
+
+            <!-- ОКНО ПРОФИЛЯ -->
+            <div class="menu-window" id="profileWindow">
+                <div class="window-title">👤 Мой профиль</div>
+                <div style="background:rgba(26,18,8,.5);border:1px solid #8a5a1a;border-radius:14px;padding:14px;display:flex;gap:14px;margin-bottom:12px;">
+                    <img class="profile-avatar-big" id="profileAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231a1208' stroke='%23ff8800' stroke-width='3'/%3E%3Ctext x='50' y='55' font-size='40' text-anchor='middle' fill='%23ff8800' font-family='Arial'%3E👤%3C/text%3E%3C/svg%3E" style="width:80px;height:80px;border-radius:50%;border:3px solid #ff8800;object-fit:cover;flex-shrink:0;">
+                    <div style="flex:1;">
+                        <div class="profile-nick-text" id="profileNick" style="color:#fff;font-size:20px;font-weight:bold;">Игрок</div>
+                        <div class="profile-id-row" style="color:#88aacc;font-size:12px;margin-top:4px;">🆔 ID: <span id="profileId">Загрузка</span></div>
+                        <div class="profile-level-badge" style="background:rgba(255,136,0,.1);border:1px solid #ff8800;border-radius:30px;padding:4px 12px;color:#ffaa44;font-size:13px;font-weight:bold;margin-top:8px;width:fit-content;" id="profileLevel">Ур. 1</div>
+                    </div>
+                </div>
+                <div class="detailed-stats-list" style="display:flex;flex-direction:column;gap:8px;">
+                    <div style="background:rgba(26,18,8,.5);border:1px solid #8a5a1a;border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;">
+                        <span style="color:#ff8844;font-size:13px;">🏆 Победы</span>
+                        <span style="color:#44ff88;font-size:15px;font-weight:bold;" id="detailWins">0</span>
+                    </div>
+                    <div style="background:rgba(26,18,8,.5);border:1px solid #8a5a1a;border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;">
+                        <span style="color:#ff8844;font-size:13px;">💀 Поражения</span>
+                        <span style="color:#ff4444;font-size:15px;font-weight:bold;" id="detailLosses">0</span>
+                    </div>
+                    <div style="background:rgba(26,18,8,.5);border:1px solid #8a5a1a;border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;">
+                        <span style="color:#ff8844;font-size:13px;">📊 Всего матчей</span>
+                        <span style="color:#fff;font-size:15px;font-weight:bold;" id="detailTotal">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ЗАГЛУШКИ ДЛЯ ДРУГИХ ОКОН (чтобы не было ошибок) -->
+            <div class="menu-window" id="inventoryWindow"><div class="window-title">🎒 Инвентарь</div><div class="inv-empty">Загрузка...</div></div>
+            <div class="menu-window" id="shopWindow"><div class="window-title">Магазин</div><div style="color:#ff8844;text-align:center;padding:20px;">Скоро...</div></div>
+            <div class="menu-window" id="marketWindow"><div class="window-title">🛒 Рынок</div><div style="color:#ff8844;text-align:center;padding:20px;">Скоро...</div></div>
+            <div class="menu-window" id="clansWindow"><div class="window-title">👫 Кланы</div><div style="color:#ff8844;text-align:center;padding:20px;">Скоро...</div></div>
+            <div class="menu-window" id="settingsWindow"><div class="window-title">⚙️ Настройки</div><div style="color:#ff8844;text-align:center;padding:20px;">Скоро...</div></div>
+            <div class="menu-window" id="achievementsWindow"><div class="window-title">📝 Достижения</div><div style="color:#ff8844;text-align:center;padding:20px;">Скоро...</div></div>
+            <div class="menu-window" id="leadersWindow"><div class="window-title">🏆 Лидеры</div><div id="leadersList" style="color:#ff8844;text-align:center;padding:20px;">Загрузка...</div></div>
+        </div>
+    </div>
+</div>
+<script>
+// ==========================================
+// ИНИЦИАЛИЗАЦИЯ SUPABASE
+// ==========================================
+const SUPABASE_URL = 'https://edvkcetmgnnfvjifitph.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_AiiSeExyc8yydqV_4lHdmQ_HOReAi9G';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let data = {}; // Здесь храним все данные игрока
+
+// ==========================================
+// ЭЛЕМЕНТЫ ИНТЕРФЕЙСА
+// ==========================================
+const $ = (id) => document.getElementById(id);
+const loadingScreen = $('loadingScreen');
+const loginScreen = $('loginScreen');
+const gameLayout = $('gameLayout');
+const googleBtn = $('googleBtn');
+const soonMessage = $('soonMessage');
+
+// ==========================================
+// 1. ВХОД ЧЕРЕЗ GOOGLE
+// ==========================================
+googleBtn.addEventListener('click', async () => {
+    soonMessage.textContent = '🔄 Перенаправление в Google...';
+    const { error } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: { 
+            redirectTo: 'https://danyKevinSK2110.github.io/StandRocket/' 
+        }
+    });
+    if (error) soonMessage.textContent = '❌ Ошибка: ' + error.message;
+});
+
+// ==========================================
+// 2. ПРОВЕРКА АВТОРИЗАЦИИ ПРИ ЗАГРУЗКЕ
+// ==========================================
+async function checkAuth() {
+    const { data: { session } } = await sb.auth.getSession();
+    
+    if (session) {
+        currentUser = session.user;
+        loginScreen.style.display = 'none';
+        loadingScreen.style.display = 'flex';
+        $('loadingText').textContent = 'Загрузка профиля...';
+        
+        // Имитация загрузки для красоты
+        setTimeout(async () => {
+            await loadProfile();
+            loadingScreen.style.display = 'none';
+            gameLayout.style.display = 'flex';
+            initGameUI();
+        }, 1000);
+    } else {
+        loadingScreen.style.display = 'none';
+        loginScreen.style.display = 'flex';
+    }
+}
+
+// ==========================================
+// 3. ЗАГРУЗКА ПРОФИЛЯ ИЗ БАЗЫ
+// ==========================================
+async function loadProfile() {
+    // Ищем профиль по UUID пользователя
+    const { data: profile, error } = await sb
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+
+    if (error || !profile) {
+        console.error('Ошибка загрузки профиля:', error);
+        // Если профиль не найден (например, триггер не сработал), создаем вручную
+        const { data: newProfile } = await sb.from('profiles').insert({
+            id: currentUser.id,
+            nick: currentUser.user_metadata?.full_name || 'Игрок',
+            email: currentUser.email,
+            avatar: currentUser.user_metadata?.avatar_url
+        }).select().single();
+        data = newProfile;
+    } else {
+        data = profile;
+    }
+
+    // Логируем вход в систему (в таблицу login_logs)
+    await sb.from('login_logs').insert({
+        profile_id: currentUser.id,
+        player_id: data.player_id,
+        nick: data.nick,
+        user_agent: navigator.userAgent
+    });
+}
+
+// ==========================================
+// 4. СОХРАНЕНИЕ ДАННЫХ (Автосохранение)
+// ==========================================
+let saveTimeout = null;
+function saveData() {
+    if (!currentUser) return;
+    clearTimeout(saveTimeout);
+    
+    saveTimeout = setTimeout(async () => {
+        const { error } = await sb.from('profiles').update({
+            nick: data.nick,
+            coins: data.coins,
+            diamonds: data.diamonds,
+            level: data.level,
+            xp: data.xp,
+            wins: data.wins,
+            losses: data.losses,
+            mmr: data.mmr,
+            calibration_games: data.calibration_games,
+            calibration_done: data.calibration_done,
+            updated_at: new Date().toISOString()
+        }).eq('id', currentUser.id);
+        
+        if (error) console.error('Ошибка сохранения:', error);
+    }, 1000); // Сохраняем через 1 секунду после последнего действия
+}
+
+// ==========================================
+// 5. ОБНОВЛЕНИЕ ИНТЕРФЕЙСА (UI)
+// ==========================================
+function initGameUI() {
+    // Шапка
+    $('nickDisplay').textContent = data.nick;
+    $('idDisplay').textContent = data.player_id; // Наш публичный ID (1000000+)
+    $('levelDisplay').textContent = 'Ур. ' + data.level;
+    $('coinsDisplay').textContent = data.coins;
+    $('diamondsDisplay').textContent = data.diamonds;
+    
+    // Опыт
+    const needXp = 100;
+    $('xpDisplay').textContent = data.xp + ' / ' + needXp + ' XP';
+    $('xpBarFill').style.width = Math.min(100, (data.xp / needXp) * 100) + '%';
+    
+    // Аватар
+    if (data.avatar) {
+        $('playerAvatar').src = data.avatar;
+        $('profileAvatar').src = data.avatar;
+    }
+    
+    // Профиль
+    $('profileNick').textContent = data.nick;
+    $('profileId').textContent = data.player_id;
+    $('profileLevel').textContent = 'Ур. ' + data.level;
+    $('detailWins').textContent = data.wins;
+    $('detailLosses').textContent = data.losses;
+    $('detailTotal').textContent = data.wins + data.losses;
+
+    // Ранг (если калибровка пройдена)
+    if (data.calibration_done) {
+        $('rankSingleName').textContent = 'Ранг: ' + data.mmr + ' ММР';
+        $('rankSingleSub').textContent = 'Калибровка пройдена';
+        $('rankIconCircle').textContent = '🏆';
+        $('rankIconCircle').className = 'rank-icon-circle gold';
+        $('rankIconCircle').style.borderColor = '#ffd700';
+    } else {
+        $('rankSingleSub').textContent = 'Сколько сыграно: ' + data.calibration_games + '/10';
+    }
+
+    // Обработчики кнопок навигации
+    document.querySelectorAll('.side-icon').forEach(icon => {
+        icon.addEventListener('click', () => {
+            // Снимаем активный класс со всех
+            document.querySelectorAll('.side-icon').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('.menu-window').forEach(w => w.classList.remove('active'));
+            
+            // Включаем нужное
+            icon.classList.add('active');
+            const windowId = icon.getAttribute('data-window');
+            const targetWindow = $(windowId);
+            if (targetWindow) targetWindow.classList.add('active');
+        });
+    });
+
+    // Кнопка ИГРАТЬ
+    $('playBtn').addEventListener('click', () => {
+        document.querySelectorAll('.side-icon').forEach(i => i.classList.remove('active'));
+        document.querySelectorAll('.menu-window').forEach(w => w.classList.remove('active'));
+        $('modesWindow').classList.add('active');
+    });
+
+    // Кнопка ПРОФИЛЬ (быстрая)
+    $('profileBtn').addEventListener('click', () => {
+        document.querySelectorAll('.menu-window').forEach(w => w.classList.remove('active'));
+        $('profileWindow').classList.add('active');
+    });
+}
+
+// ЗАПУСК ПРОВЕРКИ ПРИ ОТКРЫТИИ
+checkAuth();
+</script>
+</body>
+</html>
