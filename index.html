@@ -4,8 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
-<title>StandRocket Online</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>StandRocket V1.06 Online</title>
+
+<!-- ПОДКЛЮЧАЕМ SUPABASE ДЛЯ ОНЛАЙНА -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden;background:#0a0c12;font-family:Arial Black,sans-serif;touch-action:manipulation}
@@ -21,9 +26,9 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
 #loadingText{font-size:16px;color:#ff8844;font-family:Courier New,monospace;opacity:.7}
 #loginScreen h2{color:#ffaa44;font-size:30px;letter-spacing:2px;margin-bottom:10px}
 .login-btn{width:45%;min-width:300px;max-width:450px;padding:16px 0;border:none;border-radius:60px;font-size:19px;font-weight:bold;font-family:Arial Black,sans-serif;cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,.4)}
-.btn-google{background:#2a1a0a;color:#ff8844;border:2px solid #8a5a1a;opacity:.75; display:flex; align-items:center; justify-content:center; gap:10px;}
-.btn-google:hover{opacity:1;}
-#soonMessage{color:#ff8800;font-size:17px;font-weight:bold;min-height:26px;font-family:Courier New,monospace; text-align:center;}
+.btn-google{background:#2a1a0a;color:#ff8844;border:2px solid #8a5a1a;opacity:.75}
+.btn-offline{background:linear-gradient(145deg,#ff8800,#cc6600);color:#fff;border:2px solid #ffaa44;box-shadow:0 8px 0 #663300}
+#soonMessage{color:#ff8800;font-size:17px;font-weight:bold;min-height:26px;font-family:Courier New,monospace}
 #gameLayout{display:none;width:100%;height:100%;flex-direction:row;position:relative;overflow:hidden}
 #playerTopBar{position:absolute;top:0;left:70px;right:0;height:76px;display:flex;align-items:center;padding:6px 14px;gap:12px;background:linear-gradient(180deg,rgba(26,18,8,.98),rgba(26,18,8,.75));border-bottom:2px solid #8a5a1a;z-index:50}
 .player-avatar-box{cursor:pointer;flex-shrink:0}
@@ -32,154 +37,1141 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
 .player-info-row{display:flex;align-items:center;gap:6px}
 .id-text{color:#88aacc;font-size:12px;font-weight:bold;font-family:Courier New,monospace}
 .nick-text{color:#fff;font-size:16px;font-weight:bold;font-family:Arial Black,sans-serif;cursor:pointer}
+.clan-tag-inline{color:#888;font-size:13px;font-weight:bold;font-family:Courier New,monospace;margin-right:2px}
 .level-text-top{color:#ffaa44;font-size:12px;font-weight:bold;font-family:Courier New,monospace}
 .xp-bar-top{width:160px;height:7px;background:#0a0e1a;border-radius:10px;overflow:hidden;margin-top:2px}
 .xp-bar-top-fill{height:100%;width:0%;background:linear-gradient(90deg,#ff8800,#ffcc00,#ff8800);border-radius:10px;transition:width .4s ease}
+.player-checks-block{display:flex;gap:3px}
+.player-check-gold,.player-check-green,.player-check-red,.player-check-star{display:none;font-size:16px;line-height:1}
+.player-check-gold{color:#44ff88}
+.player-check-red{color:#ff3344}
+.player-check-star{color:#ffdd00}
 .player-right-stats{margin-left:auto;display:flex;gap:12px;align-items:center}
 .stat-pill{display:flex;align-items:center;gap:4px;padding:4px 12px;border-radius:30px}
 .stat-pill.coins{background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.2)}
 .stat-pill.coins .coin-text{color:#ffd700;font-size:14px;font-weight:bold;font-family:Courier New,monospace}
 .stat-pill.diamond{background:rgba(68,221,255,.08);border:1px solid rgba(68,221,255,.2)}
 .stat-pill.diamond .diamond-text{color:#44ddff;font-size:14px;font-weight:bold;font-family:Courier New,monospace}
+#titleDisplay{display:none;margin-top:1px;padding:1px 8px;border-radius:8px;font-size:10px;font-family:Courier New,monospace}
+#titleDisplay.ach-common{border:1px solid #b87333}#titleDisplay.ach-common #titleText{color:#b87333}
+#titleDisplay.ach-rare{border:1px solid #4488ff}#titleDisplay.ach-rare #titleText{color:#4488ff}
+#titleDisplay.ach-epic{border:1px solid #aa44ff}#titleDisplay.ach-epic #titleText{color:#aa44ff}
+#titleDisplay.ach-mythic{border:1px solid #ff2244}#titleDisplay.ach-mythic #titleText{color:#ff2244}
+#titleDisplay.ach-dev{border:1px solid #44ff88}#titleDisplay.ach-dev #titleText{color:#44ff88}
+#titleDisplay.ach-secret{border:1px solid #fff}#titleDisplay.ach-secret #titleText{color:#fff}
+.frame-bronze{box-shadow:0 0 0 3px #b87333,0 0 18px #b8733388!important}
+.frame-silver{box-shadow:0 0 0 3px #e0e0e0,0 0 18px #e0e0e088!important}
+.frame-gold{box-shadow:0 0 0 3px #ffdd00,0 0 20px #ffdd0088!important}
+.frame-gold2{box-shadow:0 0 0 3px #ffdd00,0 0 0 5px #e0e0e0,0 0 22px #ffdd0099!important}
+.frame-silver2{box-shadow:0 0 0 3px #c0c0c0,0 0 0 5px #808080,0 0 22px #c0c0c099!important}
+.frame-purple{box-shadow:0 0 0 3px #aa44ff,0 0 22px #aa44ffaa!important}
+.player-medals-row{display:flex;gap:3px;margin-top:2px}
+.medal-slot-mini{width:20px;height:20px;border-radius:5px;background:rgba(14,10,6,.6);border:1px solid #8a5a1a;display:flex;align-items:center;justify-content:center;font-size:12px}
+.medal-slot-mini.filled{border-color:#ff8800;background:rgba(255,136,0,.12)}
+.medal-slot-mini.empty{opacity:.35}
+.medal-common{color:#b87333}.medal-rare{color:#4488ff}.medal-epic{color:#aa44ff}.medal-mythic{color:#ff2244}.medal-dev{color:#44ff88}.medal-secret{color:#fff}
 #sideBar{width:70px;height:100%;background:linear-gradient(180deg,#1a1208,#0a0c12);border-right:2px solid #8a5a1a;display:flex;flex-direction:column;padding:8px 0;gap:6px;z-index:100;flex-shrink:0;align-items:center}
 .side-icon{width:54px;height:54px;display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;border-radius:14px;background:rgba(26,18,8,.4);border:1px solid transparent;color:#888;flex-shrink:0}
 .side-icon.active{background:linear-gradient(145deg,#ff8800,#cc6600);border:1px solid #ffaa44;box-shadow:0 0 20px #ff880088;color:#fff}
+.side-icon.top-icon{margin-bottom:6px}.side-icon.bottom-icon{margin-top:auto}
 #contentArea{flex:1;position:relative;overflow:hidden}
 .menu-window{display:none;position:absolute;top:76px;left:0;right:0;bottom:0;padding:14px;overflow-y:auto}
 .menu-window.active{display:block}
 .window-title{color:#ff8800;font-size:22px;font-weight:bold;font-family:Arial Black,sans-serif;letter-spacing:2px;margin-bottom:12px;border-bottom:2px solid #8a5a1a;padding-bottom:6px}
+.main-menu-grid{display:flex;flex-direction:column;gap:12px;padding-bottom:10px}
+.ranks-block{background:#0a0c12;border:1px solid #2a2a2a;border-radius:14px;padding:12px 14px}
+.ranks-block-title{color:#888;font-size:11px;font-weight:bold;font-family:Courier New,monospace;letter-spacing:1.5px;margin-bottom:8px}
+.rank-single{display:flex;align-items:center;gap:14px}
+.rank-icon-circle{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;border:3px solid rgba(255,255,255,.3);box-shadow:0 0 15px rgba(255,136,0,.5)}
+.rank-icon-circle.calibration{background:#000;border-color:#333}
+.rank-icon-circle.bronze{background:linear-gradient(145deg,#8a5a1a,#5a3a0a);border-color:#b87333}
+.rank-icon-circle.silver{background:linear-gradient(145deg,#e0e0e0,#a0a0a0);border-color:#fff}
+.rank-icon-circle.gold{background:linear-gradient(145deg,#ffdd00,#cc9900);border-color:#ffea66}
+.rank-icon-circle.master{background:linear-gradient(145deg,#fff,#4488ff);border-color:#fff}
+.rank-single-info{flex:1;min-width:0}
+.rank-single-name{color:#ff8800;font-size:18px;font-weight:bold;font-family:Arial Black,sans-serif}
+.rank-single-sub{color:#ffaa44;font-size:12px;font-family:Courier New,monospace;margin-top:3px}
+.rank-single-mmr{color:#ffd700;font-size:15px;font-weight:bold;font-family:Courier New,monospace;text-align:right;flex-shrink:0}
+.quick-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.quick-btn{background:rgba(26,18,8,.7);border:2px solid #8a5a1a;border-radius:14px;padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+.quick-btn .qb-icon{font-size:22px}
+.quick-btn .qb-label{color:#ffaa44;font-size:11px;font-weight:bold;font-family:Arial Black,sans-serif;text-align:center}
+.play-btn-area{margin-top:6px;display:flex;justify-content:center;padding:6px 0}
+.play-btn{width:55%;max-width:380px;padding:14px 0;background:linear-gradient(145deg,#44dd44,#22aa22);color:#fff;font-size:22px;font-family:Arial Black,sans-serif;letter-spacing:3px;font-weight:bold;border:3px solid #88ff88;border-radius:14px;cursor:pointer;box-shadow:0 6px 0 #116611;text-shadow:0 2px 8px #00000088}
+.modes-grid{display:flex;flex-direction:column;gap:14px;align-items:center;padding:6px 0}
+.mode-card{width:100%;max-width:500px;background:linear-gradient(145deg,#1a1208,#0e0a06);border:2px solid #ff8800;border-radius:16px;padding:16px;text-align:center;cursor:pointer}
+.mode-card .mode-title{color:#ff8800;font-size:18px;font-weight:bold;font-family:Arial Black,sans-serif;letter-spacing:1px}
+.mode-card .mode-sub{color:#ff8844;font-size:12px;font-family:Courier New,monospace;margin-top:4px}
+.botfight-panel{display:none;flex-direction:column;gap:10px;align-items:center;width:100%;max-width:500px}
+.botfight-panel.active{display:flex}
+.botfight-difficulty{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.diff-btn{padding:8px 16px;border:2px solid #8a5a1a;border-radius:12px;background:rgba(26,18,8,.5);color:#ff8844;font-size:12px;font-weight:bold;cursor:pointer}
+.diff-btn.active{border-color:#ff8800;background:rgba(255,136,0,.1);color:#ff8800}
+.botfight-botname{display:flex;gap:8px;align-items:center}
+.botfight-botname input{padding:8px 12px;border-radius:12px;border:2px solid #8a5a1a;background:#0e0a06;color:#ffaa44;font-size:13px;outline:none;width:130px;text-align:center;font-family:Courier New,monospace}
+.botfight-botname .set-btn{padding:8px 14px;border:none;border-radius:12px;background:linear-gradient(145deg,#ff8800,#cc6600);color:#fff;font-weight:bold;font-size:12px;cursor:pointer}
+.fight-btn{padding:12px 36px;border:none;border-radius:14px;background:linear-gradient(145deg,#ff8800,#cc6600);color:#fff;font-weight:bold;font-size:16px;font-family:Arial Black,sans-serif;cursor:pointer}
+.ranked-fight-btn{padding:12px 36px;border:none;border-radius:14px;background:linear-gradient(145deg,#ffd700,#ffaa00);color:#1a1a1a;font-weight:bold;font-size:16px;font-family:Arial Black,sans-serif;cursor:pointer}
+.botfight-result{text-align:center;padding:12px;border-radius:12px;background:rgba(26,18,8,.5);border:1px solid #8a5a1a;width:100%}
+.result-win{color:#44ff88;font-size:15px}.result-lose{color:#ff4444;font-size:15px}
+.result-coins{color:#ffd700;font-size:14px}.result-xp{color:#ffaa44;font-size:12px}
+.botfight-stats{display:flex;gap:20px;justify-content:center;margin-top:6px;font-family:Courier New,monospace;color:#ff8844;font-size:12px}
+.botfight-stats .wins{color:#44ff88}.botfight-stats .losses{color:#ff4444}
+.diamond-hint{color:#44ddff;font-size:12px;font-family:Courier New,monospace;text-align:center;padding:8px;background:rgba(68,221,255,.05);border:1px dashed #44ddff;border-radius:10px;margin-top:6px}
+.ach-tabs{display:flex;gap:6px;margin-bottom:12px;justify-content:center;flex-wrap:wrap}
+.ach-tab-btn{padding:6px 12px;border:2px solid #8a5a1a;border-radius:12px;background:rgba(26,18,8,.5);color:#ff8844;font-size:11px;font-weight:bold;font-family:Arial Black,sans-serif;cursor:pointer}
+.ach-tab-btn.active{border-color:#ff8800;background:rgba(255,136,0,.1);color:#ff8800}
+.ach-tab-content{display:flex;flex-direction:column;gap:8px}
+.achievement-item{background:rgba(26,18,8,.5);border:2px solid #8a5a1a;border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.achievement-item.completed{border-color:#44ff88;background:rgba(68,255,136,.05)}
+.achievement-item .ach-info{flex:1;display:flex;flex-direction:column;gap:2px}
+.achievement-item .ach-name{font-size:13px;font-weight:bold}
+.achievement-item .ach-desc{font-size:10px;font-family:Courier New,monospace;opacity:.8}
+.achievement-item .ach-status{font-size:20px}
+.ach-common .ach-name,.ach-common .ach-desc{color:#b87333}
+.ach-rare .ach-name,.ach-rare .ach-desc{color:#4488ff}
+.ach-epic .ach-name,.ach-epic .ach-desc{color:#aa44ff}
+.ach-legendary .ach-name,.ach-legendary .ach-desc{color:#ff8800;text-shadow:0 0 8px #ff880088}
+.ach-mythic .ach-name,.ach-mythic .ach-desc{color:#ff2244}
+.ach-dev .ach-name,.ach-dev .ach-desc{color:#44ff88}
+.ach-secret .ach-name,.ach-secret .ach-desc{color:#fff;text-shadow:0 0 8px #fff}
+.shop-cases-grid{display:flex;flex-direction:column;gap:14px;padding-bottom:20px}
+.case-card{background:linear-gradient(145deg,#1a1208,#0e0a06);border:2px solid #ffd700;border-radius:18px;padding:16px;display:flex;align-items:center;gap:16px}
+.case-card.legendary{border-color:#ff2244;box-shadow:0 0 30px #ff224444;background:linear-gradient(145deg,#2a0a12,#1a0608)}
+.case-card .case-emoji{font-size:48px;flex-shrink:0}
+.case-card .case-info{flex:1;display:flex;flex-direction:column;gap:4px}
+.case-card .case-name{color:#ffd700;font-size:18px;font-weight:bold;font-family:Arial Black,sans-serif}
+.case-card.legendary .case-name{color:#ff2244}
+.case-card .case-chance{color:#ff8844;font-size:11px;font-family:Courier New,monospace}
+.case-card .case-price-row{display:flex;align-items:center;gap:10px;margin-top:6px}
+.case-card .case-price{color:#ffd700;font-size:16px;font-weight:bold;font-family:Courier New,monospace}
+.case-card .case-buy-btn{padding:9px 22px;background:linear-gradient(145deg,#ffd700,#ffaa00);color:#1a1a1a;font-weight:bold;font-family:Arial Black,sans-serif;border:none;border-radius:12px;font-size:14px;cursor:pointer}
+.case-card.legendary .case-buy-btn{background:linear-gradient(145deg,#ff2244,#aa0022);color:#fff}
+.market-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;padding-bottom:20px}
+.market-item{background:rgba(26,18,8,.7);border:2px solid #8a5a1a;border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;text-align:center}
+.market-item .m-emoji{font-size:26px}.market-item .m-name{color:#ffaa44;font-size:12px;font-weight:bold;font-family:Arial Black,sans-serif}
+.market-item .m-rarity{font-size:9px;font-family:Courier New,monospace}
+.market-item .m-price{color:#ffd700;font-size:11px;font-weight:bold;font-family:Courier New,monospace;margin-top:1px}
+.market-item.common{border-color:#888}.market-item.common .m-rarity{color:#888}
+.market-item.rare{border-color:#4488ff}.market-item.rare .m-rarity{color:#4488ff}
+.market-item.epic{border-color:#aa44ff}.market-item.epic .m-rarity{color:#aa44ff}
+.market-item.legendary{border-color:#ff8800}.market-item.legendary .m-rarity{color:#ff8800}
+.market-item.arcane{border-color:#ff2244}.market-item.arcane .m-rarity{color:#ff2244}
+.market-item.nemeless{border-color:#ffdd00}.market-item.nemeless .m-rarity{color:#ffdd00}
+.market-hint{color:#ff8844;font-size:11px;text-align:center;font-family:Courier New,monospace;padding:8px;margin-bottom:10px;background:rgba(255,136,0,.05);border:1px dashed #8a5a1a;border-radius:10px}
+.inventory-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.inventory-item{background:rgba(26,18,8,.5);border:2px solid #8a5a1a;border-radius:12px;padding:10px 6px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;position:relative}
+.inventory-item .i-emoji{font-size:26px}.inventory-item .i-name{color:#ffaa44;font-size:12px;font-weight:bold}
+.inventory-item .i-rarity{font-size:9px;font-family:Courier New,monospace}
+.inventory-item .i-count{position:absolute;top:4px;right:6px;background:#0a0c12;border:1px solid #8a5a1a;border-radius:10px;padding:1px 6px;color:#ffaa44;font-size:10px;font-family:Courier New,monospace;font-weight:bold}
+.inventory-item .equipped-mark{position:absolute;top:4px;left:6px;color:#44ff88;font-size:14px}
+.inventory-item.common{border-color:#888}.inventory-item.common .i-rarity{color:#888}
+.inventory-item.rare{border-color:#4488ff}.inventory-item.rare .i-rarity{color:#4488ff}
+.inventory-item.epic{border-color:#aa44ff}.inventory-item.epic .i-rarity{color:#aa44ff}
+.inventory-item.legendary{border-color:#ff8800}.inventory-item.legendary .i-rarity{color:#ff8800}
+.inventory-item.arcane{border-color:#ff2244}.inventory-item.arcane .i-rarity{color:#ff2244}
+.inventory-item.nemeless{border-color:#ffdd00}.inventory-item.nemeless .i-rarity{color:#ffdd00}
+.inventory-item.equipped{box-shadow:0 0 15px #44ff8866}
+.inventory-empty,.inv-empty{color:#ff8844;text-align:center;padding:30px;font-size:15px;font-family:Courier New,monospace}
+.inventory-actions{display:flex;gap:10px;justify-content:center;margin-top:14px;padding-bottom:10px}
+.sell-all-btn{padding:10px 24px;border:none;border-radius:12px;background:linear-gradient(145deg,#ff8800,#cc6600);color:#fff;font-weight:bold;font-size:14px;cursor:pointer;font-family:Arial Black,sans-serif}
+#itemPopupModal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:850;justify-content:center;align-items:center}
+#itemPopupModal.active{display:flex}
+.item-popup-box{background:linear-gradient(145deg,#1a1208,#0e0a06);border:2px solid #ff8800;border-radius:20px;padding:22px 24px;max-width:360px;width:90%}
+.item-popup-emoji{font-size:56px;text-align:center;margin-bottom:8px}
+.item-popup-name{font-size:22px;font-weight:bold;font-family:Arial Black,sans-serif;text-align:center;color:#ffaa44;margin-bottom:4px}
+.item-popup-rarity{font-size:13px;font-family:Courier New,monospace;text-align:center;margin-bottom:16px}
+.item-popup-rarity.common{color:#888}.item-popup-rarity.rare{color:#4488ff}.item-popup-rarity.epic{color:#aa44ff}.item-popup-rarity.legendary{color:#ff8800}.item-popup-rarity.arcane{color:#ff2244}.item-popup-rarity.nemeless{color:#ffdd00}.item-popup-rarity.secret{color:#fff}
+.item-popup-count{text-align:center;color:#ff8844;font-size:12px;font-family:Courier New,monospace;margin-bottom:10px}
+.item-popup-btns{display:flex;flex-direction:column;gap:8px}
+.item-popup-btn{padding:12px 20px;border:none;border-radius:12px;font-size:14px;font-weight:bold;font-family:Arial Black,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.item-popup-btn.equip{background:linear-gradient(145deg,#44dd44,#22aa22);color:#fff}
+.item-popup-btn.unequip{background:linear-gradient(145deg,#ff8800,#cc6600);color:#fff}
+.item-popup-btn.sell{background:linear-gradient(145deg,#ff3344,#aa0022);color:#fff}
+#editProfileScreen{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(145deg,#1a1208,#0a0c12);z-index:600;flex-direction:column;padding:10px 14px;overflow:hidden}
+#editProfileScreen.active{display:flex}
+.edit-profile-header{display:flex;align-items:center;gap:12px;padding-bottom:10px;border-bottom:2px solid #8a5a1a;margin-bottom:12px}
+.edit-profile-back{background:rgba(26,18,8,.8);border:2px solid #8a5a1a;color:#ff8844;width:42px;height:42px;border-radius:10px;cursor:pointer;font-size:20px;font-weight:bold;display:flex;align-items:center;justify-content:center}
+.edit-profile-title{color:#fff;font-size:20px;font-family:Arial Black,sans-serif;letter-spacing:2px}
+.edit-profile-content{flex:1;display:flex;gap:14px;overflow:hidden}
+.edit-profile-left{width:220px;display:flex;flex-direction:column;gap:12px;align-items:center;padding-top:10px;flex-shrink:0}
+.edit-avatar-frame{width:130px;height:130px;border-radius:16px;padding:4px;background:linear-gradient(145deg,#ff8800,#cc6600);display:flex;align-items:center;justify-content:center}
+.edit-avatar-frame img{width:100%;height:100%;border-radius:12px;object-fit:cover;background:#1a1208}
+.edit-save-btn{padding:12px 28px;background:linear-gradient(145deg,#44dd44,#22aa22);color:#fff;font-weight:bold;font-family:Arial Black,sans-serif;border:none;border-radius:12px;font-size:14px;cursor:pointer}
+.edit-profile-right{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.edit-tabs{display:flex;background:rgba(14,10,6,.8);border:2px solid #8a5a1a;border-radius:10px 10px 0 0;overflow:hidden;flex-shrink:0}
+.edit-tab{flex:1;padding:12px 8px;background:transparent;border:none;color:#888;font-size:13px;font-weight:bold;font-family:Arial Black,sans-serif;cursor:pointer;border-bottom:3px solid transparent}
+.edit-tab.active{color:#fff;background:rgba(255,136,0,.1);border-bottom-color:#ff8800}
+.edit-tab-content{flex:1;background:rgba(14,10,6,.5);border:2px solid #8a5a1a;border-top:none;border-radius:0 0 10px 10px;padding:16px;overflow-y:auto}
+.edit-pane{display:none}.edit-pane.active{display:block}
+.edit-avatar-pane{display:flex;flex-direction:column;gap:14px;align-items:center}
+.edit-avatar-upload{padding:12px 24px;background:linear-gradient(145deg,#4488ff,#0044aa);color:#fff;font-weight:bold;font-family:Arial Black,sans-serif;border:none;border-radius:12px;font-size:13px;cursor:pointer}
+.my-profile-layout{display:flex;gap:14px;padding-bottom:10px;min-height:100%}
+.profile-nav{width:170px;background:rgba(14,10,6,.5);border:1px solid #8a5a1a;border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;height:fit-content}
+.profile-nav-btn{padding:12px 10px;background:transparent;border:2px solid transparent;border-radius:10px;color:#888;font-size:12px;font-weight:bold;font-family:Arial Black,sans-serif;cursor:pointer;text-align:left}
+.profile-nav-btn.active{color:#fff;background:rgba(255,136,0,.15);border-color:#ff8800}
+.profile-content{flex:1;min-width:0;overflow-y:auto}
+.profile-pane{display:none}.profile-pane.active{display:block}
+.profile-top-card{background:rgba(26,18,8,.5);border:1px solid #8a5a1a;border-radius:14px;padding:14px;display:flex;gap:14px;margin-bottom:12px}
+.profile-avatar-big{width:80px;height:80px;border-radius:50%;border:3px solid #ff8800;object-fit:cover;background:#1a1208;flex-shrink:0}
+.profile-info-block{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.profile-nick-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.profile-nick-text{color:#fff;font-size:20px;font-weight:bold;font-family:Arial Black,sans-serif}
+.profile-status{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-family:Courier New,monospace;font-weight:bold;padding:2px 8px;border-radius:20px;border:1px solid}
+.profile-status.online{color:#44ff88;border-color:#44ff88;background:rgba(68,255,136,.08)}
+.profile-status.away{color:#ffaa44;border-color:#ffaa44;background:rgba(255,170,68,.08)}
+.profile-status.offline{color:#ff4444;border-color:#ff4444;background:rgba(255,68,68,.08)}
+.profile-id-row{display:flex;align-items:center;gap:6px;color:#88aacc;font-size:12px;font-family:Courier New,monospace}
+.profile-id-value{color:#fff;font-size:14px;font-weight:bold;font-family:Courier New,monospace}
+.profile-level-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,136,0,.1);border:1px solid #ff8800;border-radius:30px;padding:4px 12px;color:#ffaa44;font-size:13px;font-weight:bold;font-family:Courier New,monospace;width:fit-content;margin-top:2px}
+.profile-stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.profile-stat-card{background:rgba(26,18,8,.5);border:1px solid #8a5a1a;border-radius:12px;padding:14px 10px;text-align:center}
+.profile-stat-title{color:#888;font-size:11px;font-family:Courier New,monospace;letter-spacing:1px;margin-bottom:8px}
+.profile-stat-value{color:#ffaa44;font-size:20px;font-weight:bold;font-family:Arial Black,sans-serif}
+.profile-stat-small{color:#ff8844;font-size:10px;font-family:Courier New,monospace;margin-top:4px}
+.profile-winrate-circle{width:70px;height:70px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;position:relative;background:conic-gradient(#ff8800 0%,#2a1a0a 0%);padding:4px}
+.profile-winrate-circle::before{content:'';position:absolute;top:4px;left:4px;right:4px;bottom:4px;background:#0a0c12;border-radius:50%}
+.profile-winrate-circle .wr-text{position:relative;color:#fff;font-size:16px;font-weight:bold;font-family:Arial Black,sans-serif;z-index:1}
+.profile-items-block{background:rgba(26,18,8,.5);border:1px solid #8a5a1a;border-radius:12px;padding:12px 14px;margin-top:12px}
+.profile-items-title{color:#ff8844;font-size:13px;font-family:Courier New,monospace;font-weight:bold;margin-bottom:8px;letter-spacing:1px}
+.profile-items-list{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto}
+.profile-item-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(14,10,6,.5);border-radius:8px;border-left:3px solid #8a5a1a}
+.profile-item-row.common{border-left-color:#888}.profile-item-row.rare{border-left-color:#4488ff}.profile-item-row.epic{border-left-color:#aa44ff}.profile-item-row.legendary{border-left-color:#ff8800}.profile-item-row.arcane{border-left-color:#ff2244}.profile-item-row.nemeless{border-left-color:#ffdd00}
+.profile-item-name{color:#ffaa44;font-size:13px;font-family:Arial Black,sans-serif;font-weight:bold}
+.profile-item-count{color:#88aacc;font-size:12px;font-family:Courier New,monospace}
+.profile-items-empty{color:#888;font-size:12px;font-family:Courier New,monospace;text-align:center;padding:12px}
+.detailed-stats-list{display:flex;flex-direction:column;gap:8px}
+.detailed-stat-row{background:rgba(26,18,8,.5);border:1px solid #8a5a1a;border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+.detailed-stat-label{color:#ff8844;font-size:13px;font-family:Courier New,monospace}
+.detailed-stat-value{color:#fff;font-size:15px;font-weight:bold;font-family:Arial Black,sans-serif}
+.match-history-list{display:flex;flex-direction:column;gap:6px}
+.match-history-item{background:rgba(26,18,8,.5);border:1px solid #8a5a1a;border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.match-history-item.win{border-left:4px solid #44ff88}
+.match-history-item.lose{border-left:4px solid #ff4444}
+.match-history-left{display:flex;flex-direction:column;gap:2px;min-width:0}
+.match-history-type{color:#ffaa44;font-size:13px;font-weight:bold;font-family:Arial Black,sans-serif}
+.match-history-result{font-size:11px;font-family:Courier New,monospace;font-weight:bold}
+.match-history-result.win{color:#44ff88}.match-history-result.lose{color:#ff4444}
+.match-history-date{color:#888;font-size:11px;font-family:Courier New,monospace;flex-shrink:0}
+.match-history-empty{text-align:center;padding:40px 20px;color:#ff8844;font-size:14px;font-family:Courier New,monospace}
+.settings-section{display:flex;flex-direction:column;gap:10px;background:rgba(26,18,8,.5);border:1px solid #8a5a1a;border-radius:14px;padding:14px;margin-bottom:12px}
+.settings-label{color:#ff8844;font-size:13px;font-family:Courier New,monospace;margin-bottom:4px}
+.promo-input-group{display:flex;gap:8px;align-items:center}
+.promo-input-group input{flex:1;padding:10px 14px;border-radius:12px;border:2px solid #8a5a1a;background:#0e0a06;color:#ffaa44;font-size:14px;font-family:Courier New,monospace;outline:none}
+.promo-btn{padding:10px 20px;border:none;border-radius:12px;font-size:13px;font-weight:bold;background:linear-gradient(145deg,#ff8800,#cc6600);color:#fff;cursor:pointer}
+.settings-status{color:#44ddff;font-size:12px;font-family:Courier New,monospace;text-align:center;min-height:18px}
+.settings-toggle{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(14,10,6,.5);border:1px solid #8a5a1a;border-radius:12px;color:#ffaa44;font-size:13px;cursor:pointer}
+.toggle-btn{width:44px;height:24px;border-radius:20px;background:#4a3a1a;position:relative;transition:.3s}
+.toggle-btn.active{background:#44ff88}
+.toggle-btn::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:.3s}
+.toggle-btn.active::after{left:23px}
+.title-selector{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto}
+.title-option{display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(14,10,6,.5);border:2px solid #8a5a1a;border-radius:10px;cursor:pointer}
+.title-option.active{border-color:#44ff88;background:rgba(68,255,136,.08)}
+.title-option .title-name{font-size:13px;font-weight:bold}
+.title-option .title-check{margin-left:auto;font-size:16px}
+.title-option.ach-common .title-name{color:#b87333}.title-option.ach-rare .title-name{color:#4488ff}
+.title-option.ach-epic .title-name{color:#aa44ff}.title-option.ach-legendary .title-name{color:#ff8800}
+.title-option.ach-mythic .title-name{color:#ff2244}
+.title-option.ach-dev .title-name{color:#44ff88}.title-option.ach-secret .title-name{color:#fff}
+.tm-circle{display:inline-flex;align-items:center;justify-content:center;width:60px;height:60px;border-radius:50%;background:linear-gradient(145deg,#4488ff,#0044aa);border:3px solid #88ddff;cursor:pointer;font-size:28px;margin-top:6px}
+.clan-top-bar{display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:2px solid #8a5a1a;margin-bottom:12px}
+.clan-tabs-main{display:flex;flex:1}
+.clan-tab-main{padding:10px 20px;background:transparent;border:none;color:#888;font-size:14px;font-weight:bold;font-family:Arial Black,sans-serif;cursor:pointer;border-bottom:3px solid transparent}
+.clan-tab-main.active{color:#fff;border-bottom-color:#ff8800}
+.clan-create-top-btn{padding:10px 20px;background:linear-gradient(145deg,#4488ff,#0044aa);color:#fff;font-weight:bold;font-family:Arial Black,sans-serif;font-size:13px;border:none;border-radius:10px;cursor:pointer}
+.clan-search-bar{display:flex;gap:8px;background:rgba(14,10,6,.8);border:2px solid #8a5a1a;border-radius:12px;padding:8px 12px;align-items:center;margin-bottom:10px}
+.clan-search-bar input{flex:1;padding:6px 10px;background:transparent;border:none;color:#fff;font-size:14px;font-family:Courier New,monospace;outline:none}
+.clan-search-btn{padding:6px 12px;background:transparent;border:none;color:#ffaa44;font-size:18px;cursor:pointer}
+.clan-list-header{display:grid;grid-template-columns:1fr 100px 180px;gap:10px;padding:8px 14px;color:#888;font-size:11px;font-family:Courier New,monospace;border-bottom:1px solid #2a1a0a}
+.clan-list-row{display:grid;grid-template-columns:1fr 100px 180px;gap:10px;align-items:center;padding:12px 14px;background:rgba(14,10,6,.4);border-radius:10px;margin-bottom:6px}
+.clan-row-left{display:flex;align-items:center;gap:12px;min-width:0}
+.clan-avatar{width:44px;height:44px;border-radius:8px;background:#1a1208;border:2px solid #8a5a1a;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden}
+.clan-avatar img{width:100%;height:100%;object-fit:cover}
+.clan-row-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+.clan-row-tag{color:#888;font-size:11px;font-family:Courier New,monospace}
+.clan-row-name{color:#fff;font-size:14px;font-weight:bold;font-family:Arial Black,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clan-row-members{color:#88ddff;font-size:13px;font-family:Courier New,monospace;text-align:center}
+.clan-row-action{display:flex;justify-content:flex-end}
+.clan-send-btn{padding:8px 16px;background:linear-gradient(145deg,#2a1a0a,#1a0a06);border:1px solid #8a5a1a;color:#ffaa44;font-weight:bold;font-family:Arial Black,sans-serif;font-size:11px;border-radius:8px;cursor:pointer}
+.clan-send-btn.sent{color:#44ff88;border-color:#44ff88}
+.clan-requests-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.clan-requests-col{background:rgba(14,10,6,.5);border:1px solid #8a5a1a;border-radius:12px;padding:12px;min-height:200px}
+.clan-requests-title{color:#ff8844;font-size:12px;font-family:Courier New,monospace;font-weight:bold;padding-bottom:8px;border-bottom:1px solid #2a1a0a;margin-bottom:8px}
+.clan-requests-empty{color:#666;font-size:12px;font-family:Courier New,monospace;text-align:center;padding:30px 10px}
+.my-clan-header{display:flex;align-items:center;gap:16px;background:rgba(26,18,8,.6);border:2px solid #8a5a1a;border-radius:14px;padding:16px;margin-bottom:12px}
+.my-clan-avatar-big{width:80px;height:80px;border-radius:12px;background:#1a1208;border:2px solid #ff8800;display:flex;align-items:center;justify-content:center;font-size:40px;flex-shrink:0;overflow:hidden}
+.my-clan-avatar-big img{width:100%;height:100%;object-fit:cover}
+.my-clan-info{flex:1;min-width:0}
+.my-clan-tag{color:#888;font-size:13px;font-family:Courier New,monospace}
+.my-clan-name{color:#fff;font-size:22px;font-family:Arial Black,sans-serif;margin-top:2px}
+.my-clan-members-count{color:#88ddff;font-size:13px;font-family:Courier New,monospace;margin-top:4px}
+.my-clan-tabs{display:flex;border-bottom:2px solid #8a5a1a;margin-bottom:12px}
+.my-clan-tab{padding:10px 20px;background:transparent;border:none;color:#888;font-size:13px;font-weight:bold;font-family:Arial Black,sans-serif;cursor:pointer;border-bottom:3px solid transparent}
+.my-clan-tab.active{color:#fff;border-bottom-color:#ff8800}
+.clan-member-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(14,10,6,.4);border-radius:10px;margin-bottom:6px;cursor:pointer}
+.clan-member-avatar{width:42px;height:42px;border-radius:50%;background:#1a1208;border:2px solid #8a5a1a;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden}
+.clan-member-avatar img{width:100%;height:100%;object-fit:cover}
+.clan-member-info{flex:1;min-width:0}
+.clan-member-name{color:#fff;font-size:14px;font-weight:bold;font-family:Arial Black,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clan-member-status{color:#888;font-size:11px;font-family:Courier New,monospace;margin-top:2px}
+.clan-member-status.online{color:#44ff88}.clan-member-status.away{color:#ffaa44}.clan-member-status.offline{color:#666}
+.clan-member-rank{padding:4px 10px;border-radius:8px;font-size:11px;font-family:Arial Black,sans-serif;font-weight:bold;flex-shrink:0}
+.clan-member-rank.leader{background:linear-gradient(145deg,#ffd700,#cc9900);color:#1a1a1a}
+.clan-member-rank.co-leader{background:linear-gradient(145deg,#c0c0c0,#808080);color:#1a1a1a}
+.clan-member-rank.admin{background:linear-gradient(145deg,#ff8800,#cc6600);color:#fff}
+.clan-member-rank.moderator{background:linear-gradient(145deg,#aa44ff,#6600cc);color:#fff}
+.clan-member-rank.helper{background:linear-gradient(145deg,#44ddff,#0088cc);color:#fff}
+.clan-member-rank.co-member{background:linear-gradient(145deg,#44ff88,#00aa44);color:#1a1a1a}
+.clan-member-rank.member{background:rgba(138,90,26,.3);color:#ffaa44;border:1px solid #8a5a1a}
+.clan-member-menu{display:none;position:fixed;background:#1a1208;border:2px solid #ff8800;border-radius:12px;padding:6px 0;z-index:900;min-width:180px}
+.clan-member-menu.active{display:block}
+.clan-member-menu-item{display:block;width:100%;padding:10px 16px;background:transparent;border:none;color:#ffaa44;font-size:13px;font-family:Arial Black,sans-serif;text-align:left;cursor:pointer}
+.clan-member-menu-item.danger{color:#ff4444}
+.clan-settings-section{background:rgba(14,10,6,.5);border:1px solid #8a5a1a;border-radius:12px;padding:14px;margin-bottom:12px}
+.clan-settings-title{color:#ff8844;font-size:13px;font-family:Courier New,monospace;font-weight:bold;margin-bottom:10px}
+.clan-settings-btn{display:block;width:100%;padding:12px;margin-bottom:8px;background:linear-gradient(145deg,#2a1a0a,#1a0a06);border:1px solid #8a5a1a;border-radius:10px;color:#ffaa44;font-size:13px;font-family:Arial Black,sans-serif;font-weight:bold;cursor:pointer;text-align:left}
+.clan-settings-btn.danger{color:#ff4444;border-color:#ff4444}
+.clan-settings-btn .price{float:right;color:#ffd700;font-family:Courier New,monospace}
+.clan-soon-placeholder{text-align:center;padding:60px 20px;color:#ff8844;font-size:18px;font-family:Courier New,monospace}
+.clan-soon-icon{font-size:60px;opacity:.4;display:block;margin-bottom:14px}
+.clan-modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:850;justify-content:center;align-items:center}
+.clan-modal-overlay.active{display:flex}
+.clan-modal-box{background:linear-gradient(145deg,#2a1a0a,#1a1208);border:2px solid #8a5a1a;border-radius:16px;padding:20px;max-width:460px;width:90%;max-height:90vh;overflow-y:auto;position:relative}
+.clan-modal-close{position:absolute;top:10px;right:14px;background:none;border:none;color:#ff8844;font-size:26px;font-weight:bold;cursor:pointer}
+.clan-modal-title{color:#fff;font-size:18px;font-family:Arial Black,sans-serif;letter-spacing:2px;margin-bottom:16px;border-bottom:1px solid #8a5a1a;padding-bottom:10px}
+.clan-modal-field{margin-bottom:14px}
+.clan-modal-label{color:#888;font-size:12px;font-family:Courier New,monospace;margin-bottom:6px}
+.clan-modal-field input{width:100%;padding:12px 14px;background:rgba(14,10,6,.8);border:2px solid #8a5a1a;border-radius:10px;color:#ffaa44;font-size:15px;font-family:Courier New,monospace;outline:none}
+.clan-modal-hint{color:#ff8844;font-size:10px;font-family:Courier New,monospace;margin-top:4px}
+.clan-modal-error{color:#ff4444;font-size:11px;font-family:Courier New,monospace;margin-top:4px;min-height:14px}
+.clan-modal-avatar-area{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.clan-modal-avatar-preview{width:70px;height:70px;border-radius:10px;background:#1a1208;border:2px solid #8a5a1a;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;overflow:hidden}
+.clan-modal-avatar-preview img{width:100%;height:100%;object-fit:cover}
+.clan-modal-avatar-btn{padding:10px 18px;background:linear-gradient(145deg,#4488ff,#0044aa);color:#fff;font-weight:bold;font-family:Arial Black,sans-serif;font-size:12px;border:none;border-radius:10px;cursor:pointer}
+.clan-modal-price{text-align:center;color:#ffd700;font-size:22px;font-family:Arial Black,sans-serif;font-weight:bold;margin:16px 0 10px}
+.clan-modal-create-btn{display:block;width:100%;padding:14px;background:linear-gradient(145deg,#b8860b,#8a5a1a);color:#fff;font-weight:bold;font-family:Arial Black,sans-serif;font-size:16px;border:none;border-radius:10px;cursor:pointer}
+.clan-modal-create-btn:disabled{opacity:.4;cursor:not-allowed}
+.clan-modal-warning{color:#ff8844;font-size:10px;font-family:Courier New,monospace;text-align:center;margin-top:12px;padding:10px;background:rgba(255,136,0,.05);border:1px dashed #8a5a1a;border-radius:8px}
+#rankedLobby{display:none;position:absolute;top:76px;left:0;right:0;bottom:0;padding:14px;overflow-y:auto;z-index:90}
+#rankedLobby.active{display:block}
+.lobby-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #8a5a1a}
+.lobby-back-btn{padding:10px 16px;background:linear-gradient(145deg,#ff3344,#aa0022);color:#fff;border:none;border-radius:10px;font-family:Arial Black,sans-serif;font-size:13px;cursor:pointer}
+.lobby-title{color:#ff8800;font-size:22px;font-family:Arial Black,sans-serif;letter-spacing:2px}
+.ranked-loading{text-align:center;padding:60px 20px}
+.ranked-loading-text{color:#ffaa44;font-size:20px;font-family:Arial Black,sans-serif;letter-spacing:2px;margin-bottom:20px}
+.ranked-loading-bar-bg{width:60%;max-width:400px;margin:0 auto;height:10px;background:#2a1a0a;border-radius:20px;overflow:hidden;border:2px solid #8a5a1a}
+.ranked-loading-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#ff8800,#ffcc00,#ff8800);border-radius:20px;transition:width .3s ease}
+.ranked-choice-btns{display:flex;justify-content:center;align-items:center;gap:20px;flex-wrap:wrap;padding:40px 20px}
+.ranked-choice-btn{width:200px;padding:30px 20px;background:linear-gradient(145deg,#1a1208,#0e0a06);border:2px solid #ff8800;border-radius:18px;cursor:pointer;text-align:center}
+.ranked-choice-btn .rcb-icon{font-size:48px;display:block;margin-bottom:10px}
+.ranked-choice-btn .rcb-label{color:#ffaa44;font-size:16px;font-family:Arial Black,sans-serif;letter-spacing:1px}
+.room-create-form{max-width:440px;margin:0 auto;background:rgba(26,18,8,.6);border:2px solid #8a5a1a;border-radius:16px;padding:24px}
+.room-create-field{margin-bottom:16px}
+.room-create-label{color:#ff8844;font-size:12px;font-family:Courier New,monospace;margin-bottom:6px}
+.room-create-input{width:100%;padding:12px 14px;background:rgba(14,10,6,.8);border:2px solid #8a5a1a;border-radius:10px;color:#ffaa44;font-size:15px;font-family:Courier New,monospace;outline:none}
+.room-create-info{color:#ffd700;font-size:14px;font-family:Courier New,monospace;margin-bottom:8px}
+.room-create-info-sub{color:#888;font-size:11px;font-family:Courier New,monospace;margin-bottom:16px}
+.room-create-btn{width:100%;padding:14px;background:linear-gradient(145deg,#44dd44,#22aa22);color:#fff;border:none;border-radius:12px;font-family:Arial Black,sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer}
+.room-waiting{max-width:500px;margin:0 auto;background:rgba(26,18,8,.6);border:2px solid #8a5a1a;border-radius:16px;padding:24px}
+.room-waiting-title{color:#fff;font-size:20px;font-family:Arial Black,sans-serif;letter-spacing:1px;text-align:center;margin-bottom:20px}
+.room-waiting-slots{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.room-slot{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(14,10,6,.6);border:2px solid #8a5a1a;border-radius:12px}
+.room-slot.filled{border-color:#44ff88;background:rgba(68,255,136,.05)}
+.room-slot.waiting-slot{border-style:dashed;opacity:.7}
+.room-slot-avatar{width:44px;height:44px;border-radius:50%;background:#1a1208;border:2px solid #8a5a1a;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0}
+.room-slot-avatar img{width:100%;height:100%;object-fit:cover}
+.room-slot-info{flex:1;min-width:0}
+.room-slot-name{color:#fff;font-size:15px;font-family:Arial Black,sans-serif}
+.room-slot-mmr{color:#ffd700;font-size:12px;font-family:Courier New,monospace;margin-top:2px}
+.room-slot-status{color:#ffaa44;font-size:14px;font-family:Arial Black,sans-serif;flex-shrink:0}
+.room-slot.filled .room-slot-status{color:#44ff88}
+.room-waiting-hint{color:#ff8844;font-size:13px;font-family:Courier New,monospace;text-align:center}
+.countdown-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);z-index:950;justify-content:center;align-items:center}
+.countdown-overlay.active{display:flex}
+.countdown-number{font-size:180px;color:#ff8800;font-family:Arial Black,sans-serif;text-shadow:0 0 80px #ff8800}
+.clicker-arena{max-width:600px;margin:0 auto;padding:20px}
+.clicker-header{text-align:center;margin-bottom:20px}
+.clicker-title{color:#ff8800;font-size:26px;font-family:Arial Black,sans-serif;letter-spacing:3px;margin-bottom:10px}
+.clicker-timer-bar{width:100%;height:18px;background:#2a1a0a;border:2px solid #8a5a1a;border-radius:20px;overflow:hidden}
+.clicker-timer-fill{height:100%;width:100%;background:linear-gradient(90deg,#44ff44,#ffdd00,#ff8800,#ff2244);border-radius:20px;transition:width .2s linear}
+.clicker-timer-text{color:#fff;font-size:14px;font-family:Courier New,monospace;font-weight:bold;margin-top:6px;text-align:center}
+.clicker-scores{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
+.clicker-score-card{background:rgba(26,18,8,.6);border:2px solid #8a5a1a;border-radius:14px;padding:16px;text-align:center}
+.clicker-score-card.me{border-color:#44ff88;background:rgba(68,255,136,.05)}
+.clicker-score-card.bot{border-color:#ff3344;background:rgba(255,51,68,.05)}
+.clicker-score-name{color:#fff;font-size:14px;font-family:Arial Black,sans-serif;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clicker-score-value{color:#ffd700;font-size:42px;font-family:Arial Black,sans-serif;font-weight:bold}
+.clicker-click-btn{display:block;width:100%;max-width:400px;margin:20px auto 0;padding:40px 20px;background:linear-gradient(145deg,#ff8800,#cc6600);color:#fff;border:3px solid #ffaa44;border-radius:20px;font-family:Arial Black,sans-serif;font-size:28px;letter-spacing:4px;cursor:pointer;user-select:none}
+.clicker-result{max-width:500px;margin:0 auto;padding:30px;background:rgba(26,18,8,.6);border:2px solid #8a5a1a;border-radius:20px;text-align:center}
+.clicker-result-title{font-size:32px;font-family:Arial Black,sans-serif;letter-spacing:3px;margin-bottom:20px}
+.clicker-result-title.win{color:#44ff88}.clicker-result-title.lose{color:#ff4444}
+.clicker-result-stats{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.clicker-result-stat{color:#ffaa44;font-size:16px;font-family:Courier New,monospace}
+.clicker-result-stat .value{color:#fff;font-weight:bold}
+.clicker-result-btn{padding:14px 40px;background:linear-gradient(145deg,#ff8800,#cc6600);color:#fff;border:none;border-radius:14px;font-family:Arial Black,sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer}
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:800;justify-content:center;align-items:center}
+.modal-overlay .modal-box{background:#1a1208;border:2px solid #ff8800;border-radius:20px;padding:22px 20px;max-width:380px;width:90%;max-height:85vh;overflow-y:auto}
+.modal-overlay .modal-box h3{color:#ff8800;font-size:18px;text-align:center;margin-bottom:14px}
+.modal-overlay .modal-box input,.modal-overlay .modal-box select{width:100%;padding:10px 14px;border-radius:12px;border:2px solid #8a5a1a;background:#0e0a06;color:#ffaa44;font-size:15px;text-align:center;outline:none;font-family:Courier New,monospace;margin-bottom:8px}
+.modal-btns{display:flex;gap:10px;margin-top:16px;justify-content:center;flex-wrap:wrap}
+.modal-btns button{padding:10px 22px;border:none;border-radius:30px;font-size:14px;font-weight:bold;cursor:pointer;font-family:Arial Black,sans-serif}
+.btn-save,.btn-enter{background:linear-gradient(145deg,#ff8800,#cc6600);color:#fff}
+.btn-cancel{background:#2a1a0a;color:#ff8844}
+.btn-danger{background:linear-gradient(145deg,#ff3344,#aa0022);color:#fff}
+.pass-error{color:#ff4444;font-size:12px;text-align:center;margin-top:8px;min-height:18px}
+.secret-msg-box{background:#1a1208;border:2px solid #ff8800;border-radius:18px;padding:22px;max-width:340px;width:90%;text-align:center;position:relative}
+.secret-msg-box .close-x{position:absolute;top:6px;right:12px;font-size:26px;color:#ff8844;cursor:pointer;font-weight:bold}
+.secret-msg-box .secret-text{color:#ffaa44;font-size:14px;font-family:Courier New,monospace;line-height:1.6;white-space:pre-line}
+#adminPanel{display:none;flex-direction:column;position:absolute;top:0;left:0;right:0;bottom:0;padding:14px;overflow-y:auto;background:linear-gradient(145deg,#1a1208,#0a0c12);z-index:700}
+.admin-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:2px solid #8a5a1a;margin-bottom:14px}
+.admin-title{color:#ff8800;font-size:20px;font-family:Arial Black,sans-serif}
+.admin-close-btn{background:none;border:none;color:#ff8844;font-size:28px;cursor:pointer;padding:4px 12px;font-weight:bold}
+.admin-content{flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
+.admin-label{color:#ff8844;font-size:12px;font-family:Courier New,monospace;margin-top:4px}
+.admin-input-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.admin-input-group input,.admin-input-group select{flex:1;padding:8px 12px;border-radius:12px;border:2px solid #8a5a1a;background:#0e0a06;color:#ffaa44;font-size:12px;font-family:Courier New,monospace;outline:none;min-width:80px}
+.admin-btn{padding:8px 16px;border:none;border-radius:12px;font-size:12px;font-weight:bold;background:linear-gradient(145deg,#ff8800,#cc6600);color:#fff;cursor:pointer}
+.admin-btn.danger{background:linear-gradient(145deg,#ff3344,#aa0022)}
+.admin-check-select{display:flex;gap:6px;flex-wrap:wrap}
+.check-option{padding:6px 12px;border:2px solid #8a5a1a;border-radius:10px;background:rgba(26,18,8,.5);color:#ff8844;cursor:pointer;font-size:13px}
+.check-option.active{border-color:#ff8800;background:rgba(255,136,0,.15);color:#ff8800}
+.admin-status{color:#44ff88;font-size:12px;text-align:center;font-family:Courier New,monospace;min-height:18px;margin-top:6px}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateX(-50%) translateY(0)}to{opacity:0;transform:translateX(-50%) translateY(-20px)}}
+.author-section{background:rgba(26,18,8,.7);border:2px solid #8a5a1a;border-radius:14px;padding:18px;margin-top:10px}
+.author-title{color:#ff8800;font-size:16px;font-family:'Arial Black',sans-serif;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.author-desc{color:#ff8844;font-size:12px;font-family:'Courier New',monospace;line-height:1.5;margin-bottom:15px}
+.author-input-box{width:100%;background:#0e0a06;border:2px solid #8a5a1a;padding:12px;color:#ffaa44;font-family:'Courier New',monospace;font-size:14px;outline:none;margin-bottom:10px;border-radius:8px}
+.author-input-box:focus{border-color:#ff8800}
+.author-btn{padding:12px 30px;background:linear-gradient(145deg,#ff8800,#cc6600);color:#fff;font-family:'Arial Black',sans-serif;font-size:13px;border:none;cursor:pointer;text-transform:uppercase;border-radius:8px;box-shadow:0 3px 0 #663300}
+.author-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #663300}
+.supporter-box{display:none;background:rgba(14,10,6,.6);border:1px solid #8a5a1a;padding:15px;border-radius:8px}
+.supporter-box.active{display:block}
+.supporter-label{color:#888;font-size:12px;font-family:'Courier New',monospace;margin-bottom:5px}
+.supporter-name{color:#44ff88;font-size:18px;font-family:'Arial Black',sans-serif;margin-bottom:5px}
+.supporter-date{color:#888;font-size:12px;font-family:'Courier New',monospace;margin-bottom:15px}
+.btn-stop-support{padding:10px 20px;background:#aa0022;color:#fff;font-family:'Arial Black',sans-serif;font-size:12px;border:none;cursor:pointer;text-transform:uppercase;border-radius:8px}
+.btn-stop-support:active{transform:translateY(2px)}
+.sof-modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center}
+.sof-modal-overlay.active{display:flex}
+.sof-modal{background:#1a1208;border:2px solid #ff8800;width:400px;padding:25px;border-radius:16px;box-shadow:0 0 50px rgba(255,136,0,0.3);text-align:center}
+.sof-modal h3{color:#ff8800;font-family:'Arial Black',sans-serif;font-size:18px;margin-bottom:15px;text-transform:uppercase}
+.sof-modal p{color:#ffaa44;font-family:'Courier New',monospace;font-size:13px;margin-bottom:25px;line-height:1.5}
+.sof-modal .btn-ok{display:block;width:100%;padding:12px;background:linear-gradient(145deg,#ff8800,#cc6600);color:#fff;font-family:'Arial Black',sans-serif;font-size:14px;border:none;cursor:pointer;border-radius:8px;text-transform:uppercase;box-shadow:0 3px 0 #663300}
+.sof-modal .btn-group{display:flex;gap:10px;justify-content:center}
+.sof-modal .btn-outline{padding:12px 25px;background:transparent;border:2px solid #8a5a1a;color:#ff8844;font-family:'Arial Black',sans-serif;font-size:14px;cursor:pointer;border-radius:8px}
+.frag-container{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.frag-item{display:flex;align-items:center;gap:10px;background:rgba(14,10,6,.6);padding:10px;border-radius:10px;border:1px solid #2a1a0a}
+.frag-icon{font-size:24px}
+.frag-info{flex:1}
+.frag-name{color:#fff;font-size:13px;font-weight:bold}
+.frag-progress{height:6px;background:#0a0c12;border-radius:3px;margin-top:4px;position:relative;overflow:hidden}
+.frag-progress-fill{height:100%;background:#ff8800;border-radius:3px}
+.frag-count{color:#ffaa44;font-size:12px;font-family:'Courier New',monospace}
+.frag-btn{padding:8px 12px;background:#2a1a0a;border:1px solid #8a5a1a;color:#ffaa44;border-radius:8px;font-size:11px;font-weight:bold;cursor:pointer}
+.frag-btn:disabled{opacity:0.5;cursor:not-allowed}
+@media(max-width:800px){#playerTopBar{height:68px;padding:4px 10px;gap:8px}.player-avatar-box img{width:48px;height:48px}.nick-text{font-size:14px}.id-text{font-size:11px}.level-text-top{font-size:11px}.xp-bar-top{width:120px;height:6px}.side-icon{width:48px;height:48px;font-size:22px}#sideBar{width:60px}.menu-window{top:68px;padding:10px}.window-title{font-size:18px}.rank-icon-circle{width:54px;height:54px;font-size:26px}.rank-single-name{font-size:15px}.quick-btn .qb-icon{font-size:18px}.quick-btn .qb-label{font-size:10px}.market-grid,.inventory-grid{grid-template-columns:repeat(auto-fill,minmax(95px,1fr))}.case-card{padding:12px;gap:10px}.case-card .case-emoji{font-size:38px}.case-card .case-name{font-size:14px}.play-btn{font-size:18px;padding:12px 0}.edit-profile-content{flex-direction:column;gap:8px}.edit-profile-left{width:100%;flex-direction:row;justify-content:center}.edit-avatar-frame{width:90px;height:90px}.clan-requests-grid{grid-template-columns:1fr}.clan-list-header{font-size:10px;grid-template-columns:1fr 60px 120px}.clan-list-row{grid-template-columns:1fr 60px 120px;gap:6px;padding:10px}.clan-avatar{width:36px;height:36px;font-size:18px}.clan-row-name{font-size:12px}.clicker-score-value{font-size:32px}.clicker-click-btn{font-size:22px;padding:30px 15px}.countdown-number{font-size:120px}}
+@media(max-width:600px){.side-icon{width:42px;height:42px;font-size:20px}#sideBar{width:54px}#playerTopBar{left:54px}.player-right-stats{gap:6px}.stat-pill{padding:3px 8px}.stat-pill .coin-text,.stat-pill .diamond-text{font-size:11px}}
 </style>
 </head>
 <body>
 <div id="app">
-    <div id="loadingScreen">
-        <h1 id="loadingTitle">StandRocket<span class="version" id="versionLoading">Online</span></h1>
-        <div class="loader-bar-bg"><div class="loader-bar-fill" id="loaderFill"></div></div>
-        <div id="loadingPercent">0%</div>
-        <div id="loadingText">Загрузка...</div>
+<div id="loadingScreen">
+    <h1 id="loadingTitle">StandRocket<span class="version" id="versionLoading">V 1.06 Online</span></h1>
+    <div class="loader-bar-bg"><div class="loader-bar-fill" id="loaderFill"></div></div>
+    <div id="loadingPercent">0%</div>
+    <div id="loadingText">Загрузка...</div>
+</div>
+<div id="loginScreen">
+    <h2>🚀 ДОБРО ПОЖАЛОВАТЬ</h2>
+    <button class="login-btn btn-google" id="googleBtn">🔵 Зайди через Google</button>
+    <div id="soonMessage"></div>
+</div>
+<div id="gameLayout">
+    <div id="sideBar">
+        <div class="side-icon top-icon active" data-window="homeWindow" title="Главное">▶️</div>
+        <div class="side-icon" data-window="inventoryWindow" title="Инвентарь">🔫</div>
+        <div class="side-icon" data-window="shopWindow" title="Магазин">🪙</div>
+        <div class="side-icon" data-window="marketWindow" title="Рынок">🛒</div>
+        <div class="side-icon" data-window="clansWindow" title="Кланы">👫</div>
+        <div class="side-icon bottom-icon" data-window="settingsWindow" title="Настройки">⚙️</div>
     </div>
-    <div id="loginScreen">
-        <h2>🚀 ДОБРО ПОЖАЛОВАТЬ</h2>
-        <button class="login-btn btn-google" id="googleBtn">🔵 Войти через Google</button>
-        <div id="soonMessage"></div>
+    <div id="playerTopBar">
+        <div class="player-avatar-box" id="avatarContainer">
+            <img id="playerAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231a1208' stroke='%23ff8800' stroke-width='3'/%3E%3Ctext x='50' y='55' font-size='40' text-anchor='middle' fill='%23ff8800' font-family='Arial'%3E👤%3C/text%3E%3C/svg%3E" alt="Avatar">
+        </div>
+        <div class="player-info-block">
+            <div class="player-info-row">
+                <span style="color:#88aacc; font-size:10px;">🆔</span>
+                <span class="id-text" id="idDisplay">Offline</span>
+            </div>
+            <div class="player-info-row">
+                <span class="clan-tag-inline" id="clanTagInline" style="display:none;">[TAG]</span>
+                <span class="nick-text" id="nickDisplay">Игрок</span>
+                <div class="player-checks-block">
+                    <span class="player-check-gold" id="checkDisplayGold">✅</span>
+                    <span class="player-check-green" id="checkDisplayGreen"></span>
+                    <span class="player-check-red" id="checkDisplayRed">🎥</span>
+                    <span class="player-check-star" id="checkDisplayStar">⭐</span>
+                </div>
+            </div>
+            <div class="player-info-row">
+                <span class="level-text-top" id="levelDisplay">Ур. 1</span>
+                <span style="color:#6a7a8a; font-size:9px;">·</span>
+                <span class="level-text-top" id="xpDisplay">0 / 100 XP</span>
+            </div>
+            <div class="xp-bar-top"><div class="xp-bar-top-fill" id="xpBarFill"></div></div>
+            <div id="titleDisplay" style="display:none;"><span id="titleText"></span></div>
+        </div>
+        <div class="player-right-stats">
+            <div class="stat-pill diamond">
+                <span style="font-size:13px;">💎</span>
+                <span class="diamond-text" id="diamondsDisplay">0</span>
+            </div>
+            <div class="stat-pill coins">
+                <span style="font-size:13px;">🪙</span>
+                <span class="coin-text" id="coinsDisplay">100</span>
+            </div>
+        </div>
     </div>
-        <!-- ИГРОВОЙ ИНТЕРФЕЙС -->
-    <div id="gameLayout">
-        <div id="sideBar">
-            <div class="side-icon top-icon active" data-window="homeWindow" title="Главное">▶️</div>
-            <div class="side-icon" data-window="inventoryWindow" title="Инвентарь">🔫</div>
-            <div class="side-icon" data-window="shopWindow" title="Магазин">🪙</div>
-            <div class="side-icon" data-window="marketWindow" title="Рынок">🛒</div>
-            <div class="side-icon" data-window="clansWindow" title="Кланы">👫</div>
-            <div class="side-icon bottom-icon" data-window="settingsWindow" title="Настройки">⚙️</div>
-        </div>
-        
-        <div id="playerTopBar">
-            <div class="player-avatar-box" id="avatarContainer">
-                <img id="playerAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231a1208' stroke='%23ff8800' stroke-width='3'/%3E%3Ctext x='50' y='55' font-size='40' text-anchor='middle' fill='%23ff8800' font-family='Arial'%3E👤%3C/text%3E%3C/svg%3E" alt="Avatar">
-            </div>
-            <div class="player-info-block">
-                <div class="player-info-row">
-                    <span style="color:#88aacc; font-size:10px;">🆔</span>
-                    <span class="id-text" id="idDisplay">Загрузка...</span>
+    <div id="contentArea">
+<div class="menu-window active" id="homeWindow">
+    <div class="main-menu-grid">
+        <div class="ranks-block">
+            <div class="ranks-block-title">🏆 РАНГ</div>
+            <div class="rank-single">
+                <div class="rank-icon-circle calibration" id="rankIconCircle">🔒</div>
+                <div class="rank-single-info">
+                    <div class="rank-single-name" id="rankSingleName">Калибровка</div>
+                    <div class="rank-single-sub" id="rankSingleSub">Сколько сыграно: 0/10</div>
                 </div>
-                <div class="player-info-row">
-                    <span class="nick-text" id="nickDisplay">Игрок</span>
-                </div>
-                <div class="player-info-row">
-                    <span class="level-text-top" id="levelDisplay">Ур. 1</span>
-                    <span style="color:#6a7a8a; font-size:9px;">·</span>
-                    <span class="level-text-top" id="xpDisplay">0 / 100 XP</span>
-                </div>
-                <div class="xp-bar-top"><div class="xp-bar-top-fill" id="xpBarFill"></div></div>
-            </div>
-            <div class="player-right-stats">
-                <div class="stat-pill diamond">
-                    <span style="font-size:13px;">💎</span>
-                    <span class="diamond-text" id="diamondsDisplay">0</span>
-                </div>
-                <div class="stat-pill coins">
-                    <span style="font-size:13px;">🪙</span>
-                    <span class="coin-text" id="coinsDisplay">100</span>
-                </div>
+                <div class="rank-single-mmr" id="rankSingleMmr"></div>
             </div>
         </div>
-        
-        <div id="contentArea">
-            <!-- ГЛАВНОЕ ОКНО -->
-            <div class="menu-window active" id="homeWindow">
-                <div class="main-menu-grid">
-                    <div class="ranks-block" style="background:#0a0c12; border:1px solid #2a2a2a; border-radius:14px; padding:12px 14px;">
-                        <div class="ranks-block-title" style="color:#888; font-size:11px; font-family:'Courier New',monospace; letter-spacing:1.5px; margin-bottom:8px;">🏆 РАНГ</div>
-                        <div class="rank-single" style="display:flex; align-items:center; gap:14px;">
-                            <div class="rank-icon-circle calibration" id="rankIconCircle" style="width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;background:#000;border:3px solid #333;">🔒</div>
-                            <div class="rank-single-info" style="flex:1;">
-                                <div class="rank-single-name" id="rankSingleName" style="color:#ff8800;font-size:18px;font-weight:bold;">Калибровка</div>
-                                <div class="rank-single-sub" id="rankSingleSub" style="color:#ffaa44;font-size:12px;font-family:'Courier New',monospace;">Сколько сыграно: 0/10</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="quick-actions" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;">
-                        <div class="quick-btn" id="profileBtn" style="background:rgba(26,18,8,.7);border:2px solid #8a5a1a;border-radius:14px;padding:12px 6px;text-align:center;cursor:pointer;color:#ffaa44;font-size:12px;font-weight:bold;">👤<br>Профиль</div>
-                        <div class="quick-btn" id="leadersBtn" style="background:rgba(26,18,8,.7);border:2px solid #8a5a1a;border-radius:14px;padding:12px 6px;text-align:center;cursor:pointer;color:#ffaa44;font-size:12px;font-weight:bold;">🏆<br>Лидеры</div>
-                        <div class="quick-btn" id="achievementsBtn" style="background:rgba(26,18,8,.7);border:2px solid #8a5a1a;border-radius:14px;padding:12px 6px;text-align:center;cursor:pointer;color:#ffaa44;font-size:12px;font-weight:bold;">📝<br>Достижения</div>
-                    </div>
-                    <div class="play-btn-area" style="margin-top:20px; display:flex; justify-content:center;">
-                        <button class="play-btn" id="playBtn" style="width:100%;max-width:380px;padding:14px 0;background:linear-gradient(145deg,#44dd44,#22aa22);color:#fff;font-size:22px;font-family:'Arial Black',sans-serif;letter-spacing:3px;font-weight:bold;border:3px solid #88ff88;border-radius:14px;cursor:pointer;box-shadow:0 6px 0 #116611;">ИГРАТЬ</button>
-                    </div>
-                </div>
-            </div>
+        <div class="quick-actions">
+            <div class="quick-btn" id="profileBtn"><span class="qb-icon">👤</span><span class="qb-label">Профиль</span></div>
+            <div class="quick-btn" id="leadersBtn"><span class="qb-icon">🏆</span><span class="qb-label">Лидеры</span></div>
+            <div class="quick-btn" id="achievementsBtn"><span class="qb-icon">📝</span><span class="qb-label">Достижения</span></div>
+        </div>
+        <div class="play-btn-area"><button class="play-btn" id="playBtn">ИГРАТЬ</button></div>
+    </div>
+</div>
 
-            <!-- ОКНО РЕЖИМОВ -->
-            <div class="menu-window" id="modesWindow">
-                <div class="window-title">⚔️ Режимы</div>
-                <div class="modes-grid" style="display:flex;flex-direction:column;gap:14px;align-items:center;">
-                    <div class="mode-card" id="rankedModeCard" style="width:100%;max-width:500px;background:linear-gradient(145deg,#1a1208,#0e0a06);border:2px solid #ff8800;border-radius:16px;padding:16px;text-align:center;cursor:pointer;">
-                        <div class="mode-title" style="color:#ff8800;font-size:18px;font-weight:bold;">🏆 РАНГОВЫЙ БОЙ</div>
-                        <div class="mode-sub" style="color:#ff8844;font-size:12px;font-family:'Courier New',monospace;margin-top:4px;">Дуэли с реальными игроками</div>
-                    </div>
-                    <button class="fight-btn" id="rankedFightBtn" style="padding:12px 36px;border:none;border-radius:14px;background:linear-gradient(145deg,#ffd700,#ffaa00);color:#1a1a1a;font-weight:bold;font-size:16px;margin-top:10px;">🏆 НАЧАТЬ БОЙ!</button>
-                </div>
+<div class="menu-window" id="modesWindow">
+    <div class="window-title">⚔️ Режимы</div>
+    <div class="modes-grid">
+        <div class="mode-card" id="botfightModeCard">
+            <div class="mode-title">🤖 БОТ-ФАЙТ</div>
+            <div class="mode-sub">Сразись с ботом на разных сложностях</div>
+        </div>
+        <div class="botfight-panel" id="botfightPanel">
+            <div class="botfight-difficulty">
+                <button class="diff-btn active" data-diff="easy">🟢 Лёгкий</button>
+                <button class="diff-btn" data-diff="normal">🟡 Нормальный</button>
+                <button class="diff-btn" data-diff="hard">🔴 Сложный</button>
             </div>
-
-            <!-- ОКНО ПРОФИЛЯ -->
-            <div class="menu-window" id="profileWindow">
-                <div class="window-title">👤 Мой профиль</div>
-                <div style="background:rgba(26,18,8,.5);border:1px solid #8a5a1a;border-radius:14px;padding:14px;display:flex;gap:14px;margin-bottom:12px;">
-                    <img class="profile-avatar-big" id="profileAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231a1208' stroke='%23ff8800' stroke-width='3'/%3E%3Ctext x='50' y='55' font-size='40' text-anchor='middle' fill='%23ff8800' font-family='Arial'%3E👤%3C/text%3E%3C/svg%3E" style="width:80px;height:80px;border-radius:50%;border:3px solid #ff8800;object-fit:cover;flex-shrink:0;">
-                    <div style="flex:1;">
-                        <div class="profile-nick-text" id="profileNick" style="color:#fff;font-size:20px;font-weight:bold;">Игрок</div>
-                        <div class="profile-id-row" style="color:#88aacc;font-size:12px;margin-top:4px;">🆔 ID: <span id="profileId">Загрузка</span></div>
-                        <div class="profile-level-badge" style="background:rgba(255,136,0,.1);border:1px solid #ff8800;border-radius:30px;padding:4px 12px;color:#ffaa44;font-size:13px;font-weight:bold;margin-top:8px;width:fit-content;" id="profileLevel">Ур. 1</div>
-                    </div>
-                </div>
-                <div class="detailed-stats-list" style="display:flex;flex-direction:column;gap:8px;">
-                    <div style="background:rgba(26,18,8,.5);border:1px solid #8a5a1a;border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;">
-                        <span style="color:#ff8844;font-size:13px;">🏆 Победы</span>
-                        <span style="color:#44ff88;font-size:15px;font-weight:bold;" id="detailWins">0</span>
-                    </div>
-                    <div style="background:rgba(26,18,8,.5);border:1px solid #8a5a1a;border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;">
-                        <span style="color:#ff8844;font-size:13px;">💀 Поражения</span>
-                        <span style="color:#ff4444;font-size:15px;font-weight:bold;" id="detailLosses">0</span>
-                    </div>
-                    <div style="background:rgba(26,18,8,.5);border:1px solid #8a5a1a;border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;">
-                        <span style="color:#ff8844;font-size:13px;">📊 Всего матчей</span>
-                        <span style="color:#fff;font-size:15px;font-weight:bold;" id="detailTotal">0</span>
-                    </div>
-                </div>
+            <div class="botfight-botname">
+                <input type="text" id="botNameInput" placeholder="Bot_001" maxlength="12">
+                <button class="set-btn" id="setBotNameBtn">Установить</button>
             </div>
-            
-            <!-- ЗАГЛУШКИ ДЛЯ ДРУГИХ ОКОН (чтобы не было ошибок) -->
-            <div class="menu-window" id="inventoryWindow"><div class="window-title">🎒 Инвентарь</div><div class="inv-empty">Загрузка...</div></div>
-            <div class="menu-window" id="shopWindow"><div class="window-title">Магазин</div><div style="color:#ff8844;text-align:center;padding:20px;">Скоро...</div></div>
-            <div class="menu-window" id="marketWindow"><div class="window-title">🛒 Рынок</div><div style="color:#ff8844;text-align:center;padding:20px;">Скоро...</div></div>
-            <div class="menu-window" id="clansWindow"><div class="window-title">👫 Кланы</div><div style="color:#ff8844;text-align:center;padding:20px;">Скоро...</div></div>
-            <div class="menu-window" id="settingsWindow"><div class="window-title">⚙️ Настройки</div><div style="color:#ff8844;text-align:center;padding:20px;">Скоро...</div></div>
-            <div class="menu-window" id="achievementsWindow"><div class="window-title">📝 Достижения</div><div style="color:#ff8844;text-align:center;padding:20px;">Скоро...</div></div>
-            <div class="menu-window" id="leadersWindow"><div class="window-title">🏆 Лидеры</div><div id="leadersList" style="color:#ff8844;text-align:center;padding:20px;">Загрузка...</div></div>
+            <button class="fight-btn" id="fightBtn">⚔️ БОЙ!</button>
+            <div class="botfight-result" id="fightResult">
+                <div style="color:#ff8844; font-size:12px;">Нажми «БОЙ!» чтобы сразиться</div>
+            </div>
+            <div class="botfight-stats">
+                <span>🏆 Побед: <span class="wins" id="winsCount">0</span></span>
+                <span>💀 Поражений: <span class="losses" id="lossesCount">0</span></span>
+            </div>
+        </div>
+        <div class="mode-card" id="teamModeCard">
+            <div class="mode-title">⚔️ КОМАНДНЫЙ БОЙ</div>
+            <div class="mode-sub">Боты сражаются за тебя и против тебя</div>
+        </div>
+        <div class="botfight-panel" id="teamPanel">
+            <div style="color:#ff8844;font-size:12px;font-family:'Courier New',monospace;text-align:center;">45 секунд · 4 союзника vs 5 врагов</div>
+            <button class="fight-btn" id="teamStartBtn">⚔️ НАЧАТЬ БОЙ!</button>
+            <div class="botfight-result" id="teamResult">
+                <div style="color:#88ddff;font-size:12px;">Нажми «НАЧАТЬ БОЙ!»</div>
+            </div>
+        </div>
+        <div class="mode-card" id="rankedModeCard">
+            <div class="mode-title">🏆 РАНГОВЫЙ БОЙ</div>
+            <div class="mode-sub">Создай комнату или войди в чужую</div>
+        </div>
+        <div class="botfight-panel" id="rankedPanel">
+            <button class="ranked-fight-btn" id="rankedFightBtn">🏆 РАНГОВЫЙ БОЙ!</button>
+            <div class="botfight-result" id="rankedResult">
+                <div style="color:#88ddff; font-size:12px;">Калибровка: 0/10</div>
+            </div>
         </div>
     </div>
 </div>
+<div class="menu-window" id="profileWindow">
+    <div class="window-title">👤 Мой профиль</div>
+    <div class="my-profile-layout">
+        <div class="profile-nav">
+            <button class="profile-nav-btn active" data-profile-tab="general">ОБЩЕЕ</button>
+            <button class="profile-nav-btn" data-profile-tab="detailed">ПОДРОБНАЯ<br>СТАТИСТИКА</button>
+            <button class="profile-nav-btn" data-profile-tab="history">ИСТОРИЯ<br>МАТЧЕЙ</button>
+        </div>
+        <div class="profile-content">
+            <div class="profile-pane active" id="profileGeneral">
+                <div class="profile-top-card">
+                    <img class="profile-avatar-big" id="profileAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231a1208' stroke='%23ff8800' stroke-width='3'/%3E%3Ctext x='50' y='55' font-size='40' text-anchor='middle' fill='%23ff8800' font-family='Arial'%3E👤%3C/text%3E%3C/svg%3E" alt="Avatar">
+                    <div class="profile-info-block">
+                        <div class="profile-nick-row">
+                            <span class="profile-nick-text" id="profileNick">Игрок</span>
+                            <span class="profile-status online" id="profileStatus">● В игре</span>
+                        </div>
+                        <div class="profile-id-row">🆔 ID: <span class="profile-id-value" id="profileId">Offline</span></div>
+                        <div class="profile-level-badge"><span>🏆</span><span id="profileLevel">Ур. 1</span></div>
+                        <div class="player-medals-row" id="profileMedalsRow" style="margin-top:6px;">
+                            <div class="medal-slot-mini empty" style="width:26px;height:26px;font-size:15px;"></div>
+                            <div class="medal-slot-mini empty" style="width:26px;height:26px;font-size:15px;"></div>
+                            <div class="medal-slot-mini empty" style="width:26px;height:26px;font-size:15px;"></div>
+                            <div class="medal-slot-mini empty" style="width:26px;height:26px;font-size:15px;"></div>
+                            <div class="medal-slot-mini empty" style="width:26px;height:26px;font-size:15px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-stats-grid">
+                    <div class="profile-stat-card"><div class="profile-stat-title">Текущий ранг</div><div class="profile-stat-value" id="profileRankName">—</div><div class="profile-stat-small" id="profileRankMmr">0 ММР</div></div>
+                    <div class="profile-stat-card"><div class="profile-stat-title">Процент побед</div><div class="profile-winrate-circle" id="profileWinrateCircle"><span class="wr-text" id="profileWinrate">0%</span></div></div>
+                    <div class="profile-stat-card"><div class="profile-stat-title">Сыграно матчей</div><div class="profile-stat-value" id="profileTotalMatches">0</div><div class="profile-stat-small" id="profilePlaytime">0с</div></div>
+                </div>
+                <div class="profile-items-block">
+                    <div class="profile-items-title">📦 Предметы, с которыми играл:</div>
+                    <div class="profile-items-list" id="profileItemsList"><div class="profile-items-empty">Пока ничего не надето</div></div>
+                </div>
+                <div class="profile-items-block">
+                    <div class="profile-items-title">🎨 Титул:</div>
+                    <div class="settings-toggle" id="titleToggle">
+                        <span>Показывать титул</span>
+                        <div class="toggle-btn" id="titleToggleBtn"></div>
+                    </div>
+                    <div class="title-selector" id="titleSelector" style="margin-top:8px;"></div>
+                </div>
+                <div class="profile-items-block">
+                    <div class="profile-items-title">🤖 Мой бот:</div>
+                    <div id="myBotBlock">
+                        <div class="profile-items-empty" id="myBotEmpty">У тебя нет своего бота (создай в админке)</div>
+                        <div id="myBotInfo" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-pane" id="profileDetailed">
+                <div class="detailed-stats-list">
+                    <div class="detailed-stat-row"><span class="detailed-stat-label">🏆 Победы</span><span class="detailed-stat-value" style="color:#44ff88;" id="detailWins">0</span></div>
+                    <div class="detailed-stat-row"><span class="detailed-stat-label">💀 Поражения</span><span class="detailed-stat-value" style="color:#ff4444;" id="detailLosses">0</span></div>
+                    <div class="detailed-stat-row"><span class="detailed-stat-label">📊 Всего матчей</span><span class="detailed-stat-value" id="detailTotal">0</span></div>
+                    <div class="detailed-stat-row"><span class="detailed-stat-label">🎯 Винрейт</span><span class="detailed-stat-value" style="color:#ffd700;" id="detailWinrate">0%</span></div>
+                    <div class="detailed-stat-row"><span class="detailed-stat-label">🤖 Бот-файт побед</span><span class="detailed-stat-value" style="color:#44ff88;" id="detailBotWins">0</span></div>
+                    <div class="detailed-stat-row"><span class="detailed-stat-label">🏆 Ранговый побед</span><span class="detailed-stat-value" style="color:#ffd700;" id="detailRankedWins">0</span></div>
+                    <div class="detailed-stat-row"><span class="detailed-stat-label">📈 Максимальный ММР</span><span class="detailed-stat-value" style="color:#ff8800;" id="detailMaxMmr">0</span></div>
+                    <div class="detailed-stat-row"><span class="detailed-stat-label">🎖️ Калибровка</span><span class="detailed-stat-value" id="detailCalib">0/10</span></div>
+                    <div class="detailed-stat-row"><span class="detailed-stat-label">⏱️ Общее время в игре</span><span class="detailed-stat-value" id="detailPlaytime">0с</span></div>
+                </div>
+            </div>
+            <div class="profile-pane" id="profileHistory">
+                <div class="match-history-list" id="matchHistoryList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="menu-window" id="achievementsWindow">
+    <div class="window-title">📝 Достижения</div>
+    <div class="ach-tabs">
+        <button class="ach-tab-btn active" data-ach-tab="common">🟤 Обычные</button>
+        <button class="ach-tab-btn" data-ach-tab="rare">🔵 Редкие</button>
+        <button class="ach-tab-btn" data-ach-tab="epic">🟣 Эпические</button>
+        <button class="ach-tab-btn" data-ach-tab="legendary">🟠 Легендарные</button>
+        <button class="ach-tab-btn" data-ach-tab="mythic">🔴 Мифик</button>
+        <button class="ach-tab-btn" data-ach-tab="dev">🟢 Разработчик</button>
+        <button class="ach-tab-btn" data-ach-tab="secret">⚫ Секрет</button>
+    </div>
+    <div class="ach-tab-content" id="achievementsContent"></div>
+    </div>
+    <div id="editProfileScreen">
+    <div class="edit-profile-header">
+        <button class="edit-profile-back" id="editProfileBackBtn">←</button>
+        <span class="edit-profile-title">ИЗМЕНЕНИЕ ПРОФИЛЯ</span>
+    </div>
+    <div class="edit-profile-content">
+        <div class="edit-profile-left">
+            <div class="edit-avatar-frame" id="editAvatarFrame">
+                <img id="editAvatarPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231a1208' stroke='%23ff8800' stroke-width='3'/%3E%3Ctext x='50' y='55' font-size='40' text-anchor='middle' fill='%23ff8800' font-family='Arial'%3E👤%3C/text%3E%3C/svg%3E" alt="Preview">
+            </div>
+            <button class="edit-save-btn" id="editSaveBtn">💾 СОХРАНИТЬ</button>
+        </div>
+        <div class="edit-profile-right">
+            <div class="edit-tabs">
+                <button class="edit-tab active" data-edit-tab="avatar">АВАТАР</button>
+                <button class="edit-tab" data-edit-tab="frame">РАМКА</button>
+                <button class="edit-tab" data-edit-tab="medals">МЕДАЛИ</button>
+            </div>
+            <div class="edit-tab-content">
+                <div class="edit-pane active" id="editPaneAvatar">
+                    <div class="edit-avatar-pane">
+                        <div style="color:#ff8844; font-size:13px; font-family:'Courier New', monospace; text-align:center;">Загрузи своё фото</div>
+                        <button class="edit-avatar-upload" id="editUploadBtn">📷 Загрузить фото</button>
+                        <input type="file" id="editAvatarInput" accept="image/*" style="display:none;">
+                    </div>
+                </div>
+                <div class="edit-pane" id="editPaneFrame">
+                    <div id="frameSelector" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;"></div>
+                    <button class="edit-save-btn" id="frameRemoveBtn" style="margin-top:14px; width:100%; background:linear-gradient(145deg,#ff3344,#aa0022);">❌ СНЯТЬ РАМКУ</button>
+                </div>
+                <div class="edit-pane" id="editPaneMedals">
+                    <div style="color:#ff8844; font-size:12px; font-family:'Courier New',monospace; text-align:center; margin-bottom:10px;">Выбери до 5 медалей</div>
+                    <div id="medalSelector" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px;"></div>
+                    <button class="edit-save-btn" id="medalClearBtn" style="margin-top:14px; width:100%; background:linear-gradient(145deg,#ff3344,#aa0022);">❌ ОЧИСТИТЬ СЛОТЫ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="menu-window" id="inventoryWindow">
+    <div class="window-title">🎒 Инвентарь</div>
+    <div class="inventory-grid" id="inventoryGrid"></div>
+    <div class="inv-empty" id="inventoryEmpty">Инвентарь пуст</div>
+    <div class="inventory-actions"><button class="sell-all-btn" id="sellAllBtn">💰 Продать всё</button></div>
+</div>
+
+<div class="menu-window" id="shopWindow">
+    <div class="window-title">Магазин</div>
+    <div class="shop-cases-grid">
+        <div class="case-card">
+            <div class="case-emoji">📦</div>
+            <div class="case-info">
+                <div class="case-name">Обычный Ящик</div>
+                <div class="case-chance">⚪ 70% | 🔵 20% | 🟣 8% | 🟠 2%</div>
+                <div class="case-price-row"><span class="case-price">🪙 250</span><button class="case-buy-btn" id="buyNormalCaseBtn">Купить</button></div>
+            </div>
+        </div>
+        <div class="case-card legendary">
+            <div class="case-emoji">💎</div>
+            <div class="case-info">
+                <div class="case-name">Легендарный Ящик</div>
+                <div class="case-chance">X 80% | 🟠 15% | 🟡 5%</div>
+                <div class="case-price-row"><span class="case-price">🪙 1500</span><button class="case-buy-btn" id="buyLegendaryCaseBtn">Купить</button></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="menu-window" id="marketWindow">
+    <div class="window-title">🛒 Рынок</div>
+    <div class="market-hint">🔄 Перезайди в Рынок, чтобы обновить расстановку</div>
+    <div class="market-grid" id="marketGrid"></div>
+</div>
+<div class="menu-window" id="clansWindow">
+    <div class="clan-top-bar">
+        <div class="clan-tabs-main">
+            <button class="clan-tab-main active" data-clan-main="search">Поиск клана</button>
+            <button class="clan-tab-main" data-clan-main="requests">Запросы</button>
+        </div>
+        <button class="clan-create-top-btn" id="clanCreateTopBtn">Создать клан</button>
+    </div>
+    <div class="clan-main-pane active" id="clanSearchPane">
+        <div class="clan-search-bar">
+            <input type="text" id="clanSearchInput" placeholder="Введите название или тег...">
+            <button class="clan-search-btn" id="clanSearchBtn">🔍</button>
+        </div>
+        <div class="clan-list-header"><span>Клан</span><span style="text-align:center;">Участники</span><span style="text-align:right;">Действия</span></div>
+        <div id="clanListContainer"></div>
+    </div>
+    <div class="clan-main-pane" id="clanRequestsPane" style="display:none;">
+        <div class="clan-requests-grid">
+            <div class="clan-requests-col"><div class="clan-requests-title">Новые заявки</div><div id="clanNewRequests"></div></div>
+            <div class="clan-requests-col"><div class="clan-requests-title">Отправленные</div><div id="clanSentRequests"></div></div>
+        </div>
+    </div>
+    <div id="myClanPane" style="display:none;">
+        <div class="my-clan-header">
+            <div class="my-clan-avatar-big" id="myClanAvatarBig">🛡️</div>
+            <div class="my-clan-info">
+                <div class="my-clan-tag" id="myClanTag">[TAG]</div>
+                <div class="my-clan-name" id="myClanName">Название</div>
+                <div class="my-clan-members-count" id="myClanMembersCount">Участников: 1/50</div>
+            </div>
+        </div>
+        <div class="my-clan-tabs">
+            <button class="my-clan-tab active" data-myclan-tab="general">Общий</button>
+            <button class="my-clan-tab" data-myclan-tab="settings">Настройки</button>
+            <button class="my-clan-tab" data-myclan-tab="soon">Скоро...</button>
+        </div>
+        <div class="my-clan-pane active" id="myClanGeneralPane"><div id="myClanMembersList"></div></div>
+        <div class="my-clan-pane" id="myClanSettingsPane" style="display:none;">
+            <div class="clan-settings-section">
+                <div class="clan-settings-title">🎨 Управление кланом</div>
+                <button class="clan-settings-btn" id="clanChangeNameBtn">✏️ Изменить имя / тег<span class="price">🪙 10000</span></button>
+                <button class="clan-settings-btn" id="clanChangeAvatarBtn">🖼️ Изменить аватар клана</button>
+                <button class="clan-settings-btn" id="clanExpandLimitBtn">➕ Расширить лимит (+1)<span class="price">🪙 5000</span></button>
+            </div>
+            <div class="clan-settings-section">
+                <div class="clan-settings-title">👥 Управление участниками</div>
+                <button class="clan-settings-btn" id="clanKickMemberBtn">🚫 Выгнать игрока</button>
+            </div>
+            <div class="clan-settings-section">
+                <div class="clan-settings-title">⚠️ Опасная зона</div>
+                <button class="clan-settings-btn danger" id="clanDeleteBtn">🗑️ Удалить клан</button>
+            </div>
+        </div>
+        <div class="my-clan-pane" id="myClanSoonPane" style="display:none;">
+            <div class="clan-soon-placeholder"><span class="clan-soon-icon">🚧</span>Скоро...</div>
+        </div>
+    </div>
+</div>
+
+<div class="menu-window" id="settingsWindow">
+    <div class="window-title">⚙️ Настройки</div>
+    
+    <div class="settings-section">
+        <div class="settings-label">🎟️ Промокоды:</div>
+        <div class="promo-input-group">
+            <input type="text" id="promoInput" placeholder="Введи код..." maxlength="50">
+            <button class="promo-btn" id="promoApplyBtn">Ввести</button>
+        </div>
+        <div class="settings-status" id="promoStatus"></div>
+    </div>
+
+    <div class="settings-section">
+        <div class="settings-label">👤 Поддержка автора:</div>
+        <div class="author-section" id="authorBlock">
+            <div class="author-title">ВВЕДИТЕ КОД АВТОРА</div>
+            <div class="author-desc">Введите код автора, чтобы поддержать его.</div>
+            <div id="authorInputArea">
+                <input type="text" class="author-input-box" id="standoffAuthorInput" placeholder="Код...">
+                <button class="author-btn" id="standoffAuthorApply">ПРИМЕНИТЬ</button>
+            </div>
+            <div class="supporter-box" id="authorSupporterArea">
+                <div class="supporter-label">Вы поддерживаете:</div>
+                <div class="supporter-name" id="supporterNameDisplay">—</div>
+                <div class="supporter-date" id="supporterDateDisplay">Связь активна до —</div>
+                <button class="btn-stop-support" id="standoffAuthorStop">ПРЕКРАТИТЬ</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <div class="settings-label">📋 Мой ID:</div>
+        <button class="promo-btn" id="copyIdBtn" style="width:100%;">📋 Скопировать мой ID</button>
+        <div class="settings-status" id="copyIdStatus"></div>
+    </div>
+    
+    <div class="settings-section" id="timeMachineSection" style="display:none;">
+        <div class="settings-label">🕰️ Машина времени:</div>
+        <div style="text-align:center;"><div class="tm-circle" id="tmCircle">🕰️</div></div>
+    </div>
+    
+    <div class="settings-section">
+        <div class="settings-label" id="aboutGameBtn" style="cursor:pointer; user-select:none;">ℹ️ О игре:</div>
+        <div style="color:#ff8844; font-size:13px; font-family:'Courier New', monospace; text-align:center; padding:6px;">
+            StandRocket <span id="settingsVersion">V 1.06 Online</span>
+        </div>
+    </div>
+</div>
+<div class="menu-window" id="leadersWindow">
+    <div class="window-title">🏆 Лидеры (ТОП-200)</div>
+    <div class="ach-tabs" style="margin-bottom:10px;">
+        <button class="ach-tab-btn leader-tab-btn active" data-leader-tab="mmr">🏆 ММР / Ранг</button>
+        <button class="ach-tab-btn leader-tab-btn" data-leader-tab="coins">🪙 Монеты</button>
+        <button class="ach-tab-btn leader-tab-btn" data-leader-tab="diamonds">💎 Алмазы</button>
+        <button class="ach-tab-btn leader-tab-btn" data-leader-tab="level">🏅 Уровень</button>
+    </div>
+    <div class="clan-list-header" id="leadersHeader" style="grid-template-columns:40px 1fr 100px 80px;">
+        <span>#</span><span>Игрок</span><span style="text-align:center;">Ранг</span><span style="text-align:right;">ММР</span>
+    </div>
+    <div id="leadersList"></div>
+</div>
+
+<div class="clan-modal-overlay" id="clanCreateModal">
+    <div class="clan-modal-box">
+        <button class="clan-modal-close" id="clanCreateCloseBtn">✕</button>
+        <div class="clan-modal-title">Создать клан</div>
+        <div class="clan-modal-avatar-area">
+            <div class="clan-modal-avatar-preview" id="clanCreateAvatarPreview">🛡️</div>
+            <button class="clan-modal-avatar-btn" id="clanCreateAvatarBtn">🖼️ Загрузить аватар</button>
+            <input type="file" id="clanCreateAvatarInput" accept="image/*" style="display:none;">
+        </div>
+        <div class="clan-modal-field">
+            <div class="clan-modal-label">TAG</div>
+            <input type="text" id="clanCreateTag" placeholder="Введите тег клана" maxlength="5">
+            <div class="clan-modal-hint">От 2 до 5 символов<br>Латиница, цифры, _ и -</div>
+            <div class="clan-modal-error" id="clanCreateTagError"></div>
+        </div>
+        <div class="clan-modal-field">
+            <div class="clan-modal-label">ИМЯ</div>
+            <input type="text" id="clanCreateName" placeholder="Введите название клана" maxlength="20">
+            <div class="clan-modal-error" id="clanCreateNameError"></div>
+        </div>
+        <div class="clan-modal-price"><span class="coin-icon">🪙</span> 5000</div>
+        <button class="clan-modal-create-btn" id="clanCreateConfirmBtn" disabled>Создать</button>
+        <div class="clan-modal-warning">Внимание! Изменение тега и названия клана в дальнейшем является платной функцией</div>
+    </div>
+</div>
+
+<div class="clan-modal-overlay" id="clanEditModal">
+    <div class="clan-modal-box">
+        <button class="clan-modal-close" id="clanEditCloseBtn">✕</button>
+        <div class="clan-modal-title">Изменить имя / тег</div>
+        <div class="clan-modal-field"><div class="clan-modal-label">Новый TAG</div><input type="text" id="clanEditTag" placeholder="Новый тег" maxlength="5"></div>
+        <div class="clan-modal-field"><div class="clan-modal-label">Новое ИМЯ</div><input type="text" id="clanEditName" placeholder="Новое название" maxlength="20"></div>
+        <div class="clan-modal-price"><span class="coin-icon">🪙</span> 10000</div>
+        <button class="clan-modal-create-btn" id="clanEditConfirmBtn">Изменить</button>
+    </div>
+</div>
+
+<div class="clan-member-menu" id="clanMemberMenu">
+    <button class="clan-member-menu-item" id="memberMenuMakeLeader">👑 Сделать Лидером</button>
+    <button class="clan-member-menu-item" id="memberMenuMakeCoLeader">🥇 Со-лидер</button>
+    <button class="clan-member-menu-item" id="memberMenuMakeAdmin">🛡️ Админ</button>
+    <button class="clan-member-menu-item" id="memberMenuMakeModer">⚔️ Модер</button>
+    <button class="clan-member-menu-item" id="memberMenuMakeHelper">🔧 Хелпер</button>
+    <button class="clan-member-menu-item" id="memberMenuMakeCoMember">🤝 Со-участник</button>
+    <button class="clan-member-menu-item" id="memberMenuMakeMember">👤 Участник</button>
+    <button class="clan-member-menu-item danger" id="memberMenuKick">🚫 Выгнать</button>
+</div>
+
+<div id="rankedLobby">
+    <div class="lobby-header">
+        <button class="lobby-back-btn" id="lobbyBackBtn">← НАЗАД</button>
+        <span class="lobby-title">🏆 РАНГОВЫЙ БОЙ</span>
+    </div>
+    <div id="lobbyLoading" class="ranked-loading">
+        <div class="ranked-loading-text">ЗАГРУЗКА...</div>
+        <div class="ranked-loading-bar-bg"><div class="ranked-loading-bar-fill" id="lobbyLoadingFill"></div></div>
+    </div>
+    <div id="lobbyChoice" class="ranked-choice-btns" style="display:none;">
+        <div class="ranked-choice-btn" id="createRoomBtn"><span class="rcb-icon">🎮</span><span class="rcb-label">СОЗДАТЬ<br>КОМНАТУ</span></div>
+        <div class="ranked-choice-btn" id="joinRoomBtn"><span class="rcb-icon">🚪</span><span class="rcb-label">ВОЙТИ В<br>КОМНАТУ</span></div>
+    </div>
+    <div id="lobbyCreate" class="room-create-form" style="display:none;">
+        <div class="room-create-field">
+            <div class="room-create-label">Название Комнаты:</div>
+            <input type="text" class="room-create-input" id="roomNameInput" placeholder="Введите название..." maxlength="30">
+        </div>
+        <div class="room-create-info">Игроков: 2</div>
+        <div class="room-create-info-sub">(Больше будет в новых обновлениях)</div>
+        <button class="room-create-btn" id="roomCreateConfirmBtn">СОЗДАТЬ</button>
+    </div>
+    <div id="lobbyJoin" class="room-create-form" style="display:none;">
+        <div class="room-create-field">
+            <div class="room-create-label">Введите код комнаты:</div>
+            <input type="text" class="room-create-input" id="roomJoinCodeInput" placeholder="Например: A1B2C3" maxlength="10">
+        </div>
+        <button class="room-create-btn" id="roomJoinConfirmBtn">ВОЙТИ</button>
+    </div>
+    <div id="lobbyWaiting" class="room-waiting" style="display:none;">
+        <div class="room-waiting-title" id="roomWaitingTitle">Комната: <span id="roomWaitingName">—</span></div>
+        <div class="room-waiting-slots">
+            <div class="room-slot filled" id="roomSlot1">
+                <div class="room-slot-avatar">👤</div>
+                <div class="room-slot-info"><div class="room-slot-name">Ты</div><div class="room-slot-mmr">0 ММР</div></div>
+                <div class="room-slot-status">✓ Готов</div>
+            </div>
+            <div class="room-slot waiting-slot" id="roomSlot2">
+                <div class="room-slot-avatar">⏳</div>
+                <div class="room-slot-info"><div class="room-slot-name">Ожидание...</div><div class="room-slot-mmr">—</div></div>
+                <div class="room-slot-status">🔄</div>
+            </div>
+        </div>
+        <div class="room-waiting-hint" id="roomWaitingHint">🔄 Ожидание игрока...</div>
+    </div>
+</div>
+
+<div class="countdown-overlay" id="countdownOverlay"><div class="countdown-number" id="countdownNumber">5</div></div>
+<div id="clickerArena" style="display:none; position: absolute; top: 76px; left: 0; right: 0; bottom: 0; padding: 14px; overflow-y: auto; z-index: 95;">
+    <div class="clicker-arena">
+        <div class="clicker-header">
+            <div class="clicker-title">⚔️ БОЙ!</div>
+            <div class="clicker-timer-bar"><div class="clicker-timer-fill" id="clickerTimerFill"></div></div>
+            <div class="clicker-timer-text">⏱️ Осталось: <span id="clickerTimerText">60</span> сек</div>
+        </div>
+        <div class="clicker-scores">
+            <div class="clicker-score-card me"><div class="clicker-score-name" id="clickerMyName">Ты</div><div class="clicker-score-value" id="clickerMyScore">0</div></div>
+            <div class="clicker-score-card bot"><div class="clicker-score-name" id="clickerBotName">Бот</div><div class="clicker-score-value" id="clickerBotScore">0</div></div>
+        </div>
+        <button class="clicker-click-btn" id="clickerClickBtn">КЛИКАЙ!</button>
+    </div>
+</div>
+
+<div id="clickerResultScreen" style="display:none; position: absolute; top: 76px; left: 0; right: 0; bottom: 0; padding: 14px; overflow-y: auto; z-index: 96;">
+    <div class="clicker-result">
+        <div class="clicker-result-title" id="clickerResultTitle">🏆 ПОБЕДА!</div>
+        <div class="clicker-result-stats">
+            <div class="clicker-result-stat">Твои клики: <span class="value" id="resultMyClicks">0</span></div>
+            <div class="clicker-result-stat">Клики бота: <span class="value" id="resultBotClicks">0</span></div>
+            <div class="clicker-result-stat">ММР: <span class="value" id="resultMmr">+0</span></div>
+            <div class="clicker-result-stat">Монеты: <span class="value" id="resultCoins">+0 🪙</span></div>
+            <div class="clicker-result-stat">XP: <span class="value" id="resultXp">+0</span></div>
+            <div class="clicker-result-stat">Алмазы: <span class="value" id="resultDiamonds">+0 💎</span></div>
+        </div>
+        <button class="clicker-result-btn" id="clickerResultClose">В МЕНЮ</button>
+    </div>
+</div>
+
+<div id="adminPanel">
+    <div class="admin-header">
+        <span class="admin-title">⭐ Админ-панель</span>
+        <button class="admin-close-btn" id="adminCloseBtn">✕</button>
+    </div>
+    <div class="admin-content">
+        <div class="admin-label">🎖️ Галочки:</div>
+        <div class="admin-check-select" id="checkGrid">
+            <div class="check-option active" data-check="1">✅</div>
+            <div class="check-option" data-check="2">☑️</div>
+            <div class="check-option" data-check="3">🎥</div>
+            <div class="check-option" data-check="5">⭐</div>
+            <div class="check-option" data-check="0">❌ Убрать</div>
+        </div>
+        <div class="admin-input-group"><button class="admin-btn" id="adminGiveCheckBtn">Применить</button></div>
+        <div class="admin-label">✏️ Ник:</div>
+        <div class="admin-input-group"><input type="text" id="adminNickInput" placeholder="Игрок" maxlength="16"><button class="admin-btn" id="adminSetNick">Сменить</button></div>
+        <div class="admin-label">🆔 Свой ID:</div>
+        <div class="admin-input-group"><input type="text" id="adminIdInput" placeholder="1000000" maxlength="20"><button class="admin-btn" id="adminSetId">Сменить</button></div>
+        <div class="admin-label">🔖 Версия игры:</div>
+        <div class="admin-input-group"><input type="text" id="adminVersionInput" placeholder="1.06 Online" maxlength="20"><button class="admin-btn" id="adminSetVersion">Установить</button></div>
+        <div class="admin-label">🪙 Монеты (+/−):</div>
+        <div class="admin-input-group"><input type="number" id="adminCoinsInput" placeholder="1000" min="0"><button class="admin-btn" id="adminAddCoins">+</button><button class="admin-btn danger" id="adminSubCoins">−</button></div>
+        <div class="admin-label">💎 Алмазы (+/−):</div>
+        <div class="admin-input-group"><input type="number" id="adminDiamondsInput" placeholder="100" min="0"><button class="admin-btn" id="adminAddDiamonds">+</button><button class="admin-btn danger" id="adminSubDiamonds">−</button></div>
+        <div class="admin-label">🏆 Уровень (+/−):</div>
+        <div class="admin-input-group"><input type="number" id="adminLevelInput" placeholder="10" min="1"><button class="admin-btn" id="adminAddLevel">+</button><button class="admin-btn danger" id="adminSubLevel">−</button></div>
+        <div class="admin-label">⚡ Опыт XP (+/−):</div>
+        <div class="admin-input-group"><input type="number" id="adminXpInput" placeholder="100" min="0"><button class="admin-btn" id="adminAddXp">+</button><button class="admin-btn danger" id="adminSubXp">−</button></div>
+        <div class="admin-label">🏅 Ранг (вручную):</div>
+        <div class="admin-input-group">
+            <select id="adminRankSelect">
+                <option value="calibration">🔒 Калибровка</option>
+                <option value="bronze1">🟤 Бронза 1</option><option value="bronze2">🟤 Бронза 2</option><option value="bronze3">🟤 Бронза 3</option><option value="bronze4">🟤 Бронза 4</option>
+                <option value="silver1">⚪ Сильвер 1</option><option value="silver2">⚪ Сильвер 2</option><option value="silver3">⚪ Сильвер 3</option><option value="silver4">⚪ Сильвер 4</option>
+                <option value="gold1">🟡 Голд 1</option><option value="gold2">🟡 Голд 2</option><option value="gold3">🟡 Голд 3</option><option value="gold4">🟡 Голд 4</option>
+                <option value="phoenix">🦅 Феникс</option><option value="ranger">⚔️ Рейнджер</option><option value="champion">🏆 Чемпион</option><option value="master">🏆 Мастер</option><option value="elite">🌎 Элита</option>
+                <option value="legend">🌍 Легенда</option><option value="legend1">🌑 Легенда+</option><option value="legend2">🌕 Легенда++</option>
+            </select>
+        </div>
+        <div class="admin-label">📊 ММР (число):</div>
+        <div class="admin-input-group"><input type="number" id="adminMmrInput" placeholder="0" min="0"><button class="admin-btn" id="adminSetRankMmr">Применить</button></div>
+        <div class="admin-label">🟢 Статус игрока:</div>
+        <div class="admin-input-group">
+            <select id="adminStatusSelect"><option value="online">🟢 В игре</option><option value="away">🟠 Отошёл</option><option value="offline">🔴 Ушёл</option><option value="auto">🔄 Авто</option></select>
+            <button class="admin-btn" id="adminSetStatus">Установить</button>
+        </div>
+        <div class="admin-label">🏆 Победы / Поражения:</div>
+        <div class="admin-input-group"><input type="number" id="adminWinsInput" placeholder="Победы" min="0"><button class="admin-btn" id="adminSetWins">Установить</button></div>
+        <div class="admin-input-group"><input type="number" id="adminLossesInput" placeholder="Поражения" min="0"><button class="admin-btn" id="adminSetLosses">Установить</button></div>
+        <div class="admin-label">⏱️ Общее время (в секундах):</div>
+        <div class="admin-input-group"><input type="number" id="adminTimeInput" placeholder="3600" min="0"><button class="admin-btn" id="adminSetTime">Установить</button></div>
+        <div class="admin-label">📦 Ящики себе:</div>
+        <div class="admin-input-group">
+            <select id="adminCaseType"><option value="normal">📦 Обычный</option><option value="legendary">💎 Легендарный</option></select>
+            <input type="number" id="adminCasesInput" placeholder="10" min="0"><button class="admin-btn" id="adminGiveCases">Выдать</button>
+        </div>
+        <div class="admin-label">🏅 Достижения:</div>
+        <div class="admin-input-group"><select id="adminAchSelect"></select><button class="admin-btn" id="adminGiveAch">✅ Выдать</button><button class="admin-btn danger" id="adminRemoveAch">❌ Убрать</button></div>
+        <div class="admin-label">🎁 Предметы:</div>
+        <div class="admin-input-group"><select id="adminItemSelect"></select><button class="admin-btn" id="adminGiveItem">Выдать</button></div>
+        <div class="admin-label">👥 Клан — добавить бота:</div>
+        <div class="admin-input-group"><input type="text" id="adminBotNameInput" placeholder="Имя бота (авто)" maxlength="20"><button class="admin-btn" id="adminAddBotBtn">➕ Добавить</button></div>
+        <div class="admin-input-group"><button class="admin-btn danger" id="adminClearBotsBtn">🗑️ Удалить всех ботов</button></div>
+        <div class="admin-input-group"><input type="number" id="adminClanLimitInput" placeholder="Лимит (1-50)" min="1" max="50"><button class="admin-btn" id="adminSetClanLimitBtn">Установить лимит</button></div>
+        <div class="admin-input-group"><button class="admin-btn danger" id="adminClearClanBtn">🚫 Полностью очистить клан</button></div>
+        <div class="admin-label">🤖 Мой бот (для клана):</div>
+        <div class="admin-input-group">
+            <input type="text" id="adminMyBotName" placeholder="Имя бота" maxlength="20">
+            <input type="number" id="adminMyBotLevel" placeholder="Ур." min="1" max="600" style="max-width:70px;">
+            <input type="number" id="adminMyBotMmr" placeholder="ММР" min="0" style="max-width:80px;">
+        </div>
+        <div class="admin-input-group">
+            <select id="adminMyBotRank">
+                <option value="member">👤 Участник</option>
+                <option value="co-member">🤝 Со-участник</option>
+                <option value="helper">🔧 Хелпер</option>
+                <option value="moderator">⚔️ Модер</option>
+                <option value="admin">🛡️ Админ</option>
+                <option value="co-leader">🥇 Со-лидер</option>
+            </select>
+            <button class="admin-btn" id="adminCreateMyBot">➕ Создать</button>
+            <button class="admin-btn danger" id="adminDeleteMyBot">🗑️ Удалить</button>
+        </div>
+        <div class="admin-status" id="adminMyBotStatus"></div>
+        <div class="admin-label">🧹 Сброс данных:</div>
+        <div class="admin-input-group"><button class="admin-btn danger" id="adminResetHistory">Очистить историю</button></div>
+        <div class="admin-label">⚠️ Опасная зона:</div>
+        <div class="admin-input-group"><button class="admin-btn danger" id="adminResetAccount" style="width:100%; padding:12px;">🗑️ СБРОСИТЬ АККАУНТ</button></div>
+        <div class="admin-status" id="adminStatus"></div>
+    </div>
+</div>
+<div id="itemPopupModal">
+    <div class="item-popup-box">
+        <div class="item-popup-emoji" id="itemPopupEmoji">🔫</div>
+        <div class="item-popup-name" id="itemPopupName">A1</div>
+        <div class="item-popup-rarity" id="itemPopupRarity">⚪ Обычный</div>
+        <div class="item-popup-count" id="itemPopupCount"></div>
+        <div class="item-popup-btns">
+            <button class="item-popup-btn equip" id="itemPopupEquipBtn">🎯 НАДЕТЬ</button>
+            <button class="item-popup-btn sell" id="itemPopupSellBtn">💰 Продать 🪙 0</button>
+        </div>
+    </div>
+</div>
+
+<div id="passwordModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3>🔐 Введите пароль</h3>
+        <input type="password" id="passwordInput" placeholder="Введите пароль...">
+        <div class="pass-error" id="passError"></div>
+        <div class="modal-btns"><button class="btn-cancel" id="passCancel">Отмена</button><button class="btn-enter" id="passEnter">Войти</button></div>
+    </div>
+</div>
+
+<div id="nickModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3>✏️ Сменить ник</h3>
+        <input type="text" id="nickInput" maxlength="16" placeholder="Введите ник...">
+        <div class="modal-btns"><button class="btn-cancel" id="modalCancel">Отмена</button><button class="btn-save" id="modalSave">Сохранить</button></div>
+    </div>
+</div>
+
+<div id="resetConfirmModal" class="modal-overlay">
+    <div class="modal-box" style="border-color:#ff3344;">
+        <h3 style="color:#ff3344;">⚠️ СБРОС АККАУНТА</h3>
+        <div style="color:#ffaa44; font-size:14px; text-align:center; padding:10px 0; font-family:'Courier New', monospace; line-height:1.5;">Ты уверен?<br><b style="color:#ff3344;">ВСЁ УДАЛИТСЯ!</b><br>Игра перезапустится.</div>
+        <div class="modal-btns"><button class="btn-cancel" id="resetCancelBtn">Нет</button><button class="btn-danger" id="resetConfirmBtn">Да, удалить всё</button></div>
+    </div>
+</div>
+
+<div id="caseResultModal" class="modal-overlay">
+    <div class="modal-box" style="border-color:#ffd700;">
+        <h3 style="color:#ffd700;">📦 Результат</h3>
+        <div id="caseResultItems"></div>
+        <button class="btn-save" id="caseResultClose" style="width:100%; margin-top:10px;">Закрыть</button>
+    </div>
+</div>
+
+<div id="timeMachineModal" class="modal-overlay">
+    <div class="modal-box" style="border-color:#4488ff;">
+        <h3 style="color:#4488ff;">🕰️ Машина времени</h3>
+        <div style="color:#88ddff; font-size:12px; text-align:center; font-family:'Courier New',monospace;">Выбери дату:</div>
+        <div style="text-align:center; margin-top:12px;"><button id="tmDateBtn" style="padding:12px 30px; border:2px solid #4488ff; border-radius:12px; background:rgba(68,136,255,0.1); color:#88ddff; font-size:14px; font-weight:bold; cursor:pointer; font-family:'Courier New',monospace;">01.01.2027</button></div>
+        <div class="modal-btns"><button class="btn-cancel" id="tmCancel">Отмена</button></div>
+    </div>
+</div>
+
+<div id="secretMsgModal" class="modal-overlay">
+    <div class="secret-msg-box"><span class="close-x" id="secretCloseX">✕</span><div class="secret-text" id="secretMsgText"></div></div>
+</div>
+
+<div id="updateMsgModal" class="modal-overlay">
+    <div class="secret-msg-box" style="border-color:#4488ff;"><span class="close-x" id="updateCloseX">✕</span><div class="secret-text" id="updateMsgText" style="color:#4488ff;">Скоро будет нормально!</div></div>
+</div>
+
+</div>
+</div>
+
 <script>
 // ==========================================
 // ИНИЦИАЛИЗАЦИЯ SUPABASE
@@ -189,190 +1181,807 @@ const SUPABASE_KEY = 'sb_publishable_AiiSeExyc8yydqV_4lHdmQ_HOReAi9G';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = null;
-let data = {}; // Здесь храним все данные игрока
+let data = {};
+
+function $(id){return document.getElementById(id);}
 
 // ==========================================
-// ЭЛЕМЕНТЫ ИНТЕРФЕЙСА
+// ВХОД ЧЕРЕЗ GOOGLE
 // ==========================================
-const $ = (id) => document.getElementById(id);
-const loadingScreen = $('loadingScreen');
-const loginScreen = $('loginScreen');
-const gameLayout = $('gameLayout');
-const googleBtn = $('googleBtn');
-const soonMessage = $('soonMessage');
-
-// ==========================================
-// 1. ВХОД ЧЕРЕЗ GOOGLE
-// ==========================================
-googleBtn.addEventListener('click', async () => {
-    soonMessage.textContent = '🔄 Перенаправление в Google...';
+document.getElementById('googleBtn').addEventListener('click', async () => {
+    document.getElementById('soonMessage').textContent = '🔄 Перенаправление...';
     const { error } = await sb.auth.signInWithOAuth({
         provider: 'google',
-        options: { 
-            redirectTo: 'https://danyKevinSK2110.github.io/StandRocket/' 
-        }
+        options: { redirectTo: 'https://danyKevinSK2110.github.io/StandRocket/' }
     });
-    if (error) soonMessage.textContent = '❌ Ошибка: ' + error.message;
+    if (error) document.getElementById('soonMessage').textContent = '❌ Ошибка: ' + error.message;
 });
 
 // ==========================================
-// 2. ПРОВЕРКА АВТОРИЗАЦИИ ПРИ ЗАГРУЗКЕ
+// ЗАГРУЗКА ПРОФИЛЯ И СИНХРОНИЗАЦИЯ
 // ==========================================
-async function checkAuth() {
+async function initGame() {
     const { data: { session } } = await sb.auth.getSession();
-    
     if (session) {
         currentUser = session.user;
-        loginScreen.style.display = 'none';
-        loadingScreen.style.display = 'flex';
-        $('loadingText').textContent = 'Загрузка профиля...';
-        
-        // Имитация загрузки для красоты
-        setTimeout(async () => {
-            await loadProfile();
-            loadingScreen.style.display = 'none';
-            gameLayout.style.display = 'flex';
-            initGameUI();
-        }, 1000);
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('loadingScreen').style.display = 'flex';
+        document.getElementById('loadingText').textContent = 'Синхронизация...';
+
+        const { data: profile, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+        if (profile) {
+            data = profile;
+            // Привязка полей базы к переменным игры
+            data.playerId = profile.player_id;
+            data.botWins = profile.bot_wins;
+            data.rankedWins = profile.ranked_wins;
+            data.calibrationGames = profile.calibration_games;
+            data.calibrationDone = profile.calibration_done;
+            data.maxMmr = profile.max_mmr;
+            data.totalTime = profile.total_time;
+            data.equippedFrame = profile.equipped_frame;
+            data.selectedTitle = profile.selected_title;
+            data.showTitle = profile.show_title;
+            data.completedAchievements = profile.completed_achievements || [];
+            data.inventory = profile.inventory || [];
+            data.fragments = profile.fragments || {common:0,rare:0,epic:0,legendary:0,arcane:0,nemeless:0};
+            data.usedPromos = profile.used_promos || [];
+            data.adminChecks = profile.admin_checks || {};
+            
+            // Логируем вход
+            await sb.from('login_logs').insert({
+                profile_id: currentUser.id, player_id: data.player_id, nick: data.nick, user_agent: navigator.userAgent
+            });
+
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('gameLayout').style.display = 'flex';
+                if (typeof updateUI === 'function') updateUI();
+                openWindow('homeWindow');
+            }, 1000);
+        }
     } else {
-        loadingScreen.style.display = 'none';
-        loginScreen.style.display = 'flex';
+        document.getElementById('loadingScreen').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
     }
 }
+initGame();
 
 // ==========================================
-// 3. ЗАГРУЗКА ПРОФИЛЯ ИЗ БАЗЫ
-// ==========================================
-async function loadProfile() {
-    // Ищем профиль по UUID пользователя
-    const { data: profile, error } = await sb
-        .from('profiles')
-        .select('*')
-        .eq('id', currentUser.id)
-        .single();
-
-    if (error || !profile) {
-        console.error('Ошибка загрузки профиля:', error);
-        // Если профиль не найден (например, триггер не сработал), создаем вручную
-        const { data: newProfile } = await sb.from('profiles').insert({
-            id: currentUser.id,
-            nick: currentUser.user_metadata?.full_name || 'Игрок',
-            email: currentUser.email,
-            avatar: currentUser.user_metadata?.avatar_url
-        }).select().single();
-        data = newProfile;
-    } else {
-        data = profile;
-    }
-
-    // Логируем вход в систему (в таблицу login_logs)
-    await sb.from('login_logs').insert({
-        profile_id: currentUser.id,
-        player_id: data.player_id,
-        nick: data.nick,
-        user_agent: navigator.userAgent
-    });
-}
-
-// ==========================================
-// 4. СОХРАНЕНИЕ ДАННЫХ (Автосохранение)
+// АВТОСОХРАНЕНИЕ
 // ==========================================
 let saveTimeout = null;
 function saveData() {
     if (!currentUser) return;
     clearTimeout(saveTimeout);
-    
     saveTimeout = setTimeout(async () => {
-        const { error } = await sb.from('profiles').update({
-            nick: data.nick,
-            coins: data.coins,
-            diamonds: data.diamonds,
-            level: data.level,
-            xp: data.xp,
-            wins: data.wins,
-            losses: data.losses,
-            mmr: data.mmr,
-            calibration_games: data.calibration_games,
-            calibration_done: data.calibration_done,
+        await sb.from('profiles').update({
+            nick: data.nick, coins: data.coins, diamonds: data.diamonds,
+            level: data.level, xp: data.xp, wins: data.wins, losses: data.losses,
+            bot_wins: data.botWins, ranked_wins: data.rankedWins, mmr: data.mmr,
+            max_mmr: data.maxMmr, calibration_games: data.calibrationGames,
+            calibration_done: data.calibrationDone, total_time: data.totalTime,
+            equipped: data.equipped, equipped_frame: data.equippedFrame,
+            selected_title: data.selectedTitle, show_title: data.showTitle,
+            inventory: data.inventory, completed_achievements: data.completedAchievements,
+            fragments: data.fragments, used_promos: data.usedPromos, admin_checks: data.adminChecks,
             updated_at: new Date().toISOString()
         }).eq('id', currentUser.id);
+    }, 1000);
+}
+</script>
+// ==========================================
+// ВСЯ ТВОЯ ИГРОВАЯ ЛОГИКА (С СИНХРОНИЗАЦИЕЙ)
+// ==========================================
+var ADMIN_PASSWORD='qwertyuiop1234567890';
+var CLAN_CREATE_PRICE=5000,CLAN_EXPAND_PRICE=5000,CLAN_RENAME_PRICE=10000,CLAN_MAX_MEMBERS=50;
+var FRAMES=[
+  {id:'bronze',name:'🟤 Бронза',minLevel:10,cls:'frame-bronze'},
+  {id:'silver',name:'⚪ Серебро',minLevel:50,cls:'frame-silver'},
+  {id:'gold',name:'🟡 Золото',minLevel:100,cls:'frame-gold'},
+  {id:'gold2',name:'🟡⚪ Золото 2',minLevel:150,cls:'frame-gold2'},
+  {id:'silver2',name:'🩶 Серебро 2',minLevel:200,cls:'frame-silver2'},
+  {id:'purple',name:'🟣 Фиолет',minLevel:250,cls:'frame-purple'}
+];
+var ITEMS={};
+(function(){var arrs=[['A','common','🔫'],['B','rare','🔪'],['C','epic','⚡'],['D','legendary','🔥'],['E','arcane','🌟'],['N','nemeless','🟡']];
+  for(var a=0;a<arrs.length;a++){var L=arrs[a][0],R=arrs[a][1],E=arrs[a][2];for(var n=1;n<=9;n++){ITEMS[L+n]={name:L+n,rarity:R,emoji:E};}}
+  ITEMS['TM']={name:'🕰️ Машина времени',rarity:'secret',emoji:'🕰️',noSell:true};
+})();
+var RARITY_NAMES={common:'⚪ Обычный',rare:'🔵 Редкий',epic:'🟣 Эпический',legendary:'🟠 Легендарный',arcane:'🔴 Аркана',nemeless:'🟡 Немелесс',secret:'⚫ Секрет',mythic:'🔴 Мифик',dev:'🟢 Разработчик'};
+var RARITY_PRICE={common:[10,50],rare:[50,100],epic:[500,1000],legendary:[1000,5000],arcane:[1500,5000],nemeless:[10000,15000],secret:[0,0]};
+var PROMOCODES={
+  'Start':{coins:500,xp:500},'StendRocket':{coins:1500,xp:1500},'1.06':{coins:1111,xp:1111},
+  'AdminPanel':{coins:3333,xp:3333},'Update':{coins:3333,xp:3333},'Secret':{coins:5000,xp:5000},
+  'Sans':{coins:6969,xp:6969},'ЭскизГалочка':{coins:0,xp:0,starCheck:true},
+  'TimeMachine':{coins:0,xp:0,timeMachine:true},'YT.TT.':{coins:2500,xp:2500},'#STAND':{coins:6969,xp:6969},
+  'ToBeContinued...':{coins:0,xp:0,secretMsg:'Это ещё не конец V?.?.?\nи... StandRocket 2 (???)'},
+  ';:.;:.;:._.':{coins:999999999,xp:999999999},'GET':{coins:6969,xp:6969},'SToMs':{coins:6969,xp:6969},
+  '2.00':{coins:0,xp:0},'💎':{diamonds:100},'🪙':{coins:100},'DEVELOPER':{coins:10000,diamonds:10000,xp:10000},'TESTER':{coins:5000,diamonds:5000,xp:5000}
+};
+var RANKS=[
+  {id:'calibration',name:'Калибровка',min:0,max:249,emoji:'🔒',cls:'calibration'},
+  {id:'bronze1',name:'Бронза 1',min:250,max:299,emoji:'🟤',cls:'bronze'},
+  {id:'bronze2',name:'Бронза 2',min:300,max:399,emoji:'🟤',cls:'bronze'},
+  {id:'bronze3',name:'Бронза 3',min:400,max:499,emoji:'🟤',cls:'bronze'},
+  {id:'bronze4',name:'Бронза 4',min:500,max:599,emoji:'🟤',cls:'bronze'},
+  {id:'silver1',name:'Сильвер 1',min:600,max:699,emoji:'⚪',cls:'silver'},
+  {id:'silver2',name:'Сильвер 2',min:700,max:799,emoji:'⚪',cls:'silver'},
+  {id:'silver3',name:'Сильвер 3',min:800,max:899,emoji:'⚪',cls:'silver'},
+  {id:'silver4',name:'Сильвер 4',min:900,max:999,emoji:'⚪',cls:'silver'},
+  {id:'gold1',name:'Голд 1',min:1000,max:1099,emoji:'🟡',cls:'gold'},
+  {id:'gold2',name:'Голд 2',min:1100,max:1199,emoji:'🟡',cls:'gold'},
+  {id:'gold3',name:'Голд 3',min:1200,max:1299,emoji:'🟡',cls:'gold'},
+  {id:'gold4',name:'Голд 4',min:1300,max:1399,emoji:'🟡',cls:'gold'},
+  {id:'phoenix',name:'Феникс',min:1400,max:1499,emoji:'🦅',cls:'gold'},
+  {id:'ranger',name:'Рейнджер',min:1500,max:1599,emoji:'⚔️',cls:'gold'},
+  {id:'champion',name:'Чемпион',min:1600,max:1699,emoji:'🏆',cls:'gold'},
+  {id:'master',name:'Мастер',min:1700,max:1799,emoji:'🏆',cls:'master'},
+  {id:'elite',name:'Элита',min:1800,max:2099,emoji:'🌎',cls:'master'},
+  {id:'legend',name:'Легенда',min:2100,max:2198,emoji:'🌍',cls:'master'},
+  {id:'legend1',name:'Легенда+',min:2199,max:2999,emoji:'🌑',cls:'master'},
+  {id:'legend2',name:'Легенда++',min:3000,max:999999,emoji:'🌕',cls:'master'}
+];
+var ACHIEVEMENTS=[
+  {id:'welcome',name:'Добро пожаловать',desc:'Зайди в игру в первый раз',reward:0,rarity:'common',condition:function(){return true;}},
+  {id:'calibration',name:'Калибровка пройдена',desc:'Пройди калибровку (10 ранговых боёв)',reward:500,rarity:'common',condition:function(d){return d.calibrationDone;}},
+  {id:'coins1000',name:'Получить 1000🪙',desc:'Нужно иметь 1000🪙',reward:100,rarity:'common',condition:function(d){return d.coins>=1000;}},
+  {id:'wins10',name:'Победить 10 раз',desc:'Нужно победить 10 раз',reward:50,rarity:'common',condition:function(d){return d.wins>=10;}},
+  {id:'coins10000',name:'Получить 10000🪙',desc:'Нужно иметь 10000🪙',reward:1000,rarity:'rare',condition:function(d){return d.coins>=10000;}},
+  {id:'wins100',name:'Победить 100 раз',desc:'Нужно победить 100 раз',reward:500,rarity:'rare',condition:function(d){return d.wins>=100;}},
+  {id:'silver4',name:'Сильвер 4',desc:'Достигни Сильвер 4 (900 ММР)',reward:2000,rarity:'rare',condition:function(d){return d.mmr>=900;}},
+  {id:'phoenix',name:'Феникс',desc:'Достигни Феникс (1400 ММР)',reward:10000,rarity:'epic',condition:function(d){return d.mmr>=1400;}},
+  {id:'legendary',name:'Легендарный',desc:'Собери 10 фрагментов Легендарки',reward:5000,rarity:'legendary',condition:function(d){return d.fragments.legendary>=10;}},
+  {id:'secret',name:'???',desc:'???',reward:0,rarity:'secret',condition:function(d){var k=Object.keys(PROMOCODES);for(var i=0;i<k.length;i++){if(d.usedPromos.indexOf(k[i])===-1)return false;}return true;}},
+  {id:'rework',name:'Rework',desc:'TimeMachine + ToBeContinued...',reward:999999,rarity:'secret',condition:function(d){return d.timeMachineUsed&&d.usedPromos.indexOf('TimeMachine')!==-1&&d.usedPromos.indexOf('ToBeContinued...')!==-1;}},
+  {id:'mythic_soon',name:'Скоро ещё...',desc:'Получить никак',reward:0,rarity:'mythic',condition:function(){return false;}},
+  {id:'mythic_d10000',name:'Получить 10000💎',desc:'Нужно иметь 10000💎',reward:5000,rarity:'mythic',condition:function(d){return d.diamonds>=10000;}},
+  {id:'mythic_soon2',name:'Скоро ещё...',desc:'Получить никак',reward:0,rarity:'mythic',condition:function(){return false;}},
+  {id:'mythic_legend',name:'Достичь легенды',desc:'В ранге быть легендой',reward:3000,rarity:'mythic',condition:function(d){return d.calibrationDone&&d.mmr>=2100;}},
+  {id:'first_diamond',name:'Первый 💎',desc:'Получить 💎',reward:50,rarity:'common',condition:function(d){return d.diamonds>=1;}},
+  {id:'mythic_wins500',name:'Победить 500 раз',desc:'Победить 500 раз',reward:5000,rarity:'mythic',condition:function(d){return d.wins>=500;}},
+  {id:'epic_coins100k',name:'Получить 100000🪙',desc:'Нужно иметь 100000🪙',reward:10000,rarity:'epic',condition:function(d){return d.coins>=100000;}},
+  {id:'epic_wins50',name:'Победить 50 раз',desc:'Победить 50 раз',reward:1000,rarity:'epic',condition:function(d){return d.wins>=50;}},
+  {id:'epic_d1000',name:'Получить 1000💎',desc:'Нужно иметь 1000💎',reward:500,rarity:'epic',condition:function(d){return d.diamonds>=1000;}},
+  {id:'first_game',name:'Первая игра',desc:'Сыграть в любой режим',reward:50,rarity:'common',condition:function(d){return (d.wins+d.losses)>=1;}},
+  {id:'first_clan',name:'Первый клан',desc:'Зайти или создать клан',reward:200,rarity:'rare',condition:function(d){return !!d.myClan;}},
+  {id:'story200',name:'2.00',desc:'{???} {Сюжет #2}',reward:0,rarity:'secret',condition:function(){return false;}},
+  {id:'developer',name:'Разработчик',desc:'Только через админку',reward:0,rarity:'dev',condition:function(){return false;}},
+  {id:'meet_dev',name:'Встретить разраба-бота',desc:'0.1% в ранговом: DEV_02',reward:5000,rarity:'mythic',condition:function(d){return d.metDevBot===true;}},
+  {id:'rare_d500',name:'Получить 500💎',desc:'Нужно иметь 500💎',reward:300,rarity:'rare',condition:function(d){return d.diamonds>=500;}},
+  {id:'rare_promo1',name:'Ввести 1 промокод',desc:'Ввести 1 промокод',reward:100,rarity:'rare',condition:function(d){return d.usedPromos.length>=1;}}
+];
+var CLAN_RANKS={
+  'leader':{name:'Лидер',icon:'👑',cls:'leader',priority:7},
+  'co-leader':{name:'Со-лидер',icon:'🥇',cls:'co-leader',priority:6},
+  'admin':{name:'Админ',icon:'🛡️',cls:'admin',priority:5},
+  'moderator':{name:'Модер',icon:'⚔️',cls:'moderator',priority:4},
+  'helper':{name:'Хелпер',icon:'🔧',cls:'helper',priority:3},
+  'co-member':{name:'Со-участник',icon:'🤝',cls:'co-member',priority:2},
+  'member':{name:'Участник',icon:'👤',cls:'member',priority:1}
+};
+var BOT_NAMES=['xXKillerXx','ProGamer','DarkSide','NeoVoid','ShadowHunter','FrostbiteX','StormBringer','ViperStrike','GhostSniper','PhantomAce','RedDragon','NightFury','IronWolf','SilverBullet','BloodMoon','ThunderBolt','CrimsonBlade','FrozenSoul','RapidFire','DeathWish','SavageKing','CyberNinja','OmegaZero','VortexZ','HyperBeam','BlackHawk','ZeroGravity','NeonBlade','QuantumX','LunarEclipse','ThunderGod','SilentStorm','IronFist','VenomStrike','FalconEye','MadMax','RogueOne','SkyWalker','NightOwl','WolfPack','FireStorm','IceCold','BoneCrusher','SteelHeart','VoidWalker'];
+
+function getXpForLevel(){return 100;}
+function addXp(amount){
+  data.xp+=amount;
+  while(data.level<600){var need=getXpForLevel();if(data.xp>=need){data.xp-=need;data.level++;}else break;}
+  if(data.level>=600){data.level=600;data.xp=0;}
+  checkFrameUnlocks();saveData();
+}
+function checkFrameUnlocks(){
+  var ch=false;
+  for(var i=0;i<FRAMES.length;i++){
+    var f=FRAMES[i];
+    if(data.level>=f.minLevel&&data.unlockedFrames.indexOf(f.id)===-1){data.unlockedFrames.push(f.id);showToast('🖼️ Открыта рамка: '+f.name+'!','#ffd700',3000);ch=true;}
+  }
+  if(ch)saveData();
+}
+function applyFrameToElement(el,frameId){
+  if(!el)return;
+  el.classList.remove('frame-bronze','frame-silver','frame-gold','frame-gold2','frame-silver2','frame-purple');
+  if(frameId){for(var i=0;i<FRAMES.length;i++){if(FRAMES[i].id===frameId){el.classList.add(FRAMES[i].cls);break;}}}
+}
+function showToast(text,color,duration){
+  color=color||'#ff8800';duration=duration||2500;
+  var t=document.createElement('div');
+  t.style.cssText='position:fixed;top:90px;left:50%;transform:translateX(-50%);background:rgba(26,18,8,0.95);border:2px solid '+color+';color:'+color+';padding:10px 22px;border-radius:14px;font-family:Courier New,monospace;font-size:13px;font-weight:bold;z-index:9999;box-shadow:0 0 30px '+color+'66;animation:toastIn 0.3s ease;';
+  t.textContent=text;document.body.appendChild(t);
+  setTimeout(function(){t.style.animation='toastOut 0.3s ease';setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},300);},duration);
+}
+function getRankObjByMmr(mmr){for(var i=0;i<RANKS.length;i++){if(mmr>=RANKS[i].min&&mmr<=RANKS[i].max)return RANKS[i];}return RANKS[0];}
+function getRankById(id){for(var i=0;i<RANKS.length;i++){if(RANKS[i].id===id)return RANKS[i];}return RANKS[0];}
+function getCurrentRankObj(){if(data.adminRankOverride){var r=getRankById(data.adminRankOverride);if(r)return r;}if(!data.calibrationDone)return RANKS[0];return getRankObjByMmr(data.mmr);}
+function addMatchToHistory(type,win){
+  var now=new Date();var months=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  data.matchHistory.unshift({type:type,win:win,date:now.getDate()+' '+months[now.getMonth()],timestamp:now.getTime()});
+  if(data.matchHistory.length>20)data.matchHistory=data.matchHistory.slice(0,20);
+  saveData();
+}
+function addMatchWithEquipped(){if(!data.equipped)return;data.itemMatches[data.equipped]=(data.itemMatches[data.equipped]||0)+1;saveData();}
+function formatTime(s){if(s<60)return s+'с';if(s<3600)return Math.floor(s/60)+'м';return Math.floor(s/3600)+'ч';}
+
+var lastActivity=Date.now();
+function getCurrentStatus(){if(data.forcedStatus&&data.forcedStatus!=='auto')return data.forcedStatus;var ina=Date.now()-lastActivity;if(ina<30000)return 'online';if(ina<300000)return 'away';return 'offline';}
+function getStatusText(st){if(st==='online')return '● В игре';if(st==='away')return '● Отошёл';return '● Ушёл';}
+['mousedown','touchstart','keydown','click','scroll'].forEach(function(evt){document.addEventListener(evt,function(){lastActivity=Date.now();},{passive:true});});
+
+setInterval(function(){if(gameRoot&&gameRoot.style.display==='flex'){data.totalTime++;if(data.totalTime%30===0)saveData();}},1000);
+
+var loadingScreen=$('loadingScreen'),loginScreen=$('loginScreen'),gameRoot=$('gameLayout'),adminPanel=$('adminPanel'),editProfileScreen=$('editProfileScreen'),rankedLobby=$('rankedLobby'),clickerArena=$('clickerArena'),clickerResultScreen=$('clickerResultScreen'),countdownOverlay=$('countdownOverlay');
+var loaderFill=$('loaderFill'),loadingPercent=$('loadingPercent'),loadingText=$('loadingText');
+var soonMessage=$('soonMessage'),googleBtn=$('googleBtn'),offlineBtn=$('offlineBtn');
+var nickDisplay=$('nickDisplay'),idDisplay=$('idDisplay'),clanTagInline=$('clanTagInline');
+var levelDisplay=$('levelDisplay'),xpDisplay=$('xpDisplay'),xpBarFill=$('xpBarFill');
+var titleDisplay=$('titleDisplay'),titleText=$('titleText');
+var checkDisplayGold=$('checkDisplayGold'),checkDisplayGreen=$('checkDisplayGreen'),checkDisplayRed=$('checkDisplayRed'),checkDisplayStar=$('checkDisplayStar');
+var coinsDisplay=$('coinsDisplay'),diamondsDisplay=$('diamondsDisplay');
+var versionLoading=$('versionLoading'),settingsVersion=$('settingsVersion');
+var sideIcons=document.querySelectorAll('.side-icon');var allWindows=document.querySelectorAll('.menu-window');
+var rankIconCircle=$('rankIconCircle'),rankSingleName=$('rankSingleName'),rankSingleSub=$('rankSingleSub'),rankSingleMmr=$('rankSingleMmr');
+var aboutGameBtn=$('aboutGameBtn'),profileBtn=$('profileBtn'),leadersBtn=$('leadersBtn'),achievementsBtn=$('achievementsBtn'),playBtn=$('playBtn');
+var profileNavBtns=document.querySelectorAll('.profile-nav-btn');var profilePanes=document.querySelectorAll('.profile-pane');
+var profileAvatar=$('profileAvatar'),profileNick=$('profileNick'),profileStatus=$('profileStatus'),profileId=$('profileId'),profileLevel=$('profileLevel');
+var profileRankName=$('profileRankName'),profileRankMmr=$('profileRankMmr'),profileWinrate=$('profileWinrate'),profileWinrateCircle=$('profileWinrateCircle'),profileTotalMatches=$('profileTotalMatches'),profilePlaytime=$('profilePlaytime'),profileItemsList=$('profileItemsList');
+var detailWins=$('detailWins'),detailLosses=$('detailLosses'),detailTotal=$('detailTotal'),detailWinrate=$('detailWinrate'),detailBotWins=$('detailBotWins'),detailRankedWins=$('detailRankedWins'),detailMaxMmr=$('detailMaxMmr'),detailCalib=$('detailCalib'),detailPlaytime=$('detailPlaytime'),matchHistoryList=$('matchHistoryList');
+var editProfileBackBtn=$('editProfileBackBtn'),editAvatarPreview=$('editAvatarPreview'),editSaveBtn=$('editSaveBtn'),editUploadBtn=$('editUploadBtn'),editAvatarInput=$('editAvatarInput');
+var editTabs=document.querySelectorAll('.edit-tab');var editPanes=document.querySelectorAll('.edit-pane');
+var playerAvatar=$('playerAvatar'),avatarContainer=$('avatarContainer'),profileMedalsRow=$('profileMedalsRow');
+var frameSelector=$('frameSelector'),frameRemoveBtn=$('frameRemoveBtn'),medalSelector=$('medalSelector'),medalClearBtn=$('medalClearBtn');
+var clanTabMainBtns=document.querySelectorAll('.clan-tab-main'),clanSearchPane=$('clanSearchPane'),clanRequestsPane=$('clanRequestsPane'),myClanPane=$('myClanPane');
+var clanCreateTopBtn=$('clanCreateTopBtn'),clanSearchInput=$('clanSearchInput'),clanSearchBtn=$('clanSearchBtn'),clanListContainer=$('clanListContainer');
+var clanNewRequests=$('clanNewRequests'),clanSentRequests=$('clanSentRequests');
+var myClanAvatarBig=$('myClanAvatarBig'),myClanTag=$('myClanTag'),myClanName=$('myClanName'),myClanMembersCount=$('myClanMembersCount');
+var myClanTabs=document.querySelectorAll('.my-clan-tab'),myClanGeneralPane=$('myClanGeneralPane'),myClanSettingsPane=$('myClanSettingsPane'),myClanSoonPane=$('myClanSoonPane'),myClanMembersList=$('myClanMembersList');
+var clanCreateModal=$('clanCreateModal'),clanCreateCloseBtn=$('clanCreateCloseBtn'),clanCreateAvatarPreview=$('clanCreateAvatarPreview'),clanCreateAvatarBtn=$('clanCreateAvatarBtn'),clanCreateAvatarInput=$('clanCreateAvatarInput');
+var clanCreateTag=$('clanCreateTag'),clanCreateName=$('clanCreateName'),clanCreateTagError=$('clanCreateTagError'),clanCreateNameError=$('clanCreateNameError'),clanCreateConfirmBtn=$('clanCreateConfirmBtn');
+var clanEditModal=$('clanEditModal'),clanEditCloseBtn=$('clanEditCloseBtn'),clanEditTag=$('clanEditTag'),clanEditName=$('clanEditName'),clanEditConfirmBtn=$('clanEditConfirmBtn');
+var clanMemberMenu=$('clanMemberMenu'),clanChangeNameBtn=$('clanChangeNameBtn'),clanChangeAvatarBtn=$('clanChangeAvatarBtn'),clanExpandLimitBtn=$('clanExpandLimitBtn'),clanKickMemberBtn=$('clanKickMemberBtn'),clanDeleteBtn=$('clanDeleteBtn');
+var memberMenuMakeLeader=$('memberMenuMakeLeader'),memberMenuMakeCoLeader=$('memberMenuMakeCoLeader'),memberMenuMakeAdmin=$('memberMenuMakeAdmin'),memberMenuMakeModer=$('memberMenuMakeModer'),memberMenuMakeHelper=$('memberMenuMakeHelper'),memberMenuMakeCoMember=$('memberMenuMakeCoMember'),memberMenuMakeMember=$('memberMenuMakeMember'),memberMenuKick=$('memberMenuKick');
+var botfightModeCard=$('botfightModeCard'),botfightPanel=$('botfightPanel'),rankedModeCard=$('rankedModeCard'),rankedPanel=$('rankedPanel'),fightBtn=$('fightBtn'),rankedFightBtn=$('rankedFightBtn'),fightResult=$('fightResult'),winsCount=$('winsCount'),lossesCount=$('lossesCount'),botNameInput=$('botNameInput'),setBotNameBtn=$('setBotNameBtn'),diffBtns=document.querySelectorAll('.diff-btn');
+var teamModeCard=$('teamModeCard'),teamPanel=$('teamPanel'),teamStartBtn=$('teamStartBtn'),teamResult=$('teamResult');
+var achievementsContent=$('achievementsContent');
+var inventoryGrid=$('inventoryGrid'),inventoryEmpty=$('inventoryEmpty'),sellAllBtn=$('sellAllBtn'),buyNormalCaseBtn=$('buyNormalCaseBtn'),buyLegendaryCaseBtn=$('buyLegendaryCaseBtn'),marketGrid=$('marketGrid');
+var promoInput=$('promoInput'),promoApplyBtn=$('promoApplyBtn'),promoStatus=$('promoStatus'),titleToggle=$('titleToggle'),titleToggleBtn=$('titleToggleBtn'),titleSelector=$('titleSelector'),timeMachineSection=$('timeMachineSection'),tmCircle=$('tmCircle');
+var passwordModal=$('passwordModal'),passwordInput=$('passwordInput'),passEnter=$('passEnter'),passCancel=$('passCancel'),passError=$('passError');
+var nickModal=$('nickModal'),nickInput=$('nickInput'),modalSave=$('modalSave'),modalCancel=$('modalCancel');
+var resetConfirmModal=$('resetConfirmModal'),resetCancelBtn=$('resetCancelBtn'),resetConfirmBtn=$('resetConfirmBtn');
+var caseResultModal=$('caseResultModal'),caseResultItems=$('caseResultItems'),caseResultClose=$('caseResultClose');
+var timeMachineModal=$('timeMachineModal'),tmDateBtn=$('tmDateBtn'),tmCancel=$('tmCancel');
+var secretMsgModal=$('secretMsgModal'),secretMsgText=$('secretMsgText'),secretCloseX=$('secretCloseX');
+var updateMsgModal=$('updateMsgModal'),updateCloseX=$('updateCloseX');
+var itemPopupModal=$('itemPopupModal'),itemPopupEmoji=$('itemPopupEmoji'),itemPopupName=$('itemPopupName'),itemPopupRarity=$('itemPopupRarity'),itemPopupCount=$('itemPopupCount'),itemPopupEquipBtn=$('itemPopupEquipBtn'),itemPopupSellBtn=$('itemPopupSellBtn');
+var lobbyBackBtn=$('lobbyBackBtn'),lobbyLoading=$('lobbyLoading'),lobbyLoadingFill=$('lobbyLoadingFill'),lobbyChoice=$('lobbyChoice'),lobbyCreate=$('lobbyCreate'),lobbyJoin=$('lobbyJoin'),lobbyWaiting=$('lobbyWaiting');
+var createRoomBtn=$('createRoomBtn'),joinRoomBtn=$('joinRoomBtn'),roomNameInput=$('roomNameInput'),roomCreateConfirmBtn=$('roomCreateConfirmBtn'),roomJoinCodeInput=$('roomJoinCodeInput'),roomJoinConfirmBtn=$('roomJoinConfirmBtn'),roomWaitingName=$('roomWaitingName'),roomWaitingHint=$('roomWaitingHint'),roomSlot2=$('roomSlot2');
+var countdownNumber=$('countdownNumber');
+var clickerTimerFill=$('clickerTimerFill'),clickerTimerText=$('clickerTimerText'),clickerMyName=$('clickerMyName'),clickerBotName=$('clickerBotName'),clickerMyScore=$('clickerMyScore'),clickerBotScore=$('clickerBotScore'),clickerClickBtn=$('clickerClickBtn');
+var adminCloseBtn=$('adminCloseBtn'),checkGrid=$('checkGrid'),adminGiveCheckBtn=$('adminGiveCheckBtn'),adminNickInput=$('adminNickInput'),adminSetNick=$('adm
+    inSetNick'),adminIdInput=$('adminIdInput'),adminSetId=$('adminSetId'),adminVersionInput=$('adminVersionInput'),adminSetVersion=$('adminSetVersion');
+var adminCoinsInput=$('adminCoinsInput'),adminAddCoins=$('adminAddCoins'),adminSubCoins=$('adminSubCoins'),adminDiamondsInput=$('adminDiamondsInput'),adminAddDiamonds=$('adminAddDiamonds'),adminSubDiamonds=$('adminSubDiamonds');
+var adminLevelInput=$('adminLevelInput'),adminAddLevel=$('adminAddLevel'),adminSubLevel=$('adminSubLevel'),adminXpInput=$('adminXpInput'),adminAddXp=$('adminAddXp'),adminSubXp=$('adminSubXp');
+var adminRankSelect=$('adminRankSelect'),adminMmrInput=$('adminMmrInput'),adminSetRankMmr=$('adminSetRankMmr'),adminStatusSelect=$('adminStatusSelect'),adminSetStatus=$('adminSetStatus');
+var adminWinsInput=$('adminWinsInput'),adminSetWins=$('adminSetWins'),adminLossesInput=$('adminLossesInput'),adminSetLosses=$('adminSetLosses'),adminTimeInput=$('adminTimeInput'),adminSetTime=$('adminSetTime');
+var adminCasesInput=$('adminCasesInput'),adminCaseType=$('adminCaseType'),adminGiveCases=$('adminGiveCases'),adminAchSelect=$('adminAchSelect'),adminGiveAch=$('adminGiveAch'),adminRemoveAch=$('adminRemoveAch'),adminItemSelect=$('adminItemSelect'),adminGiveItem=$('adminGiveItem');
+var adminBotNameInput=$('adminBotNameInput'),adminAddBotBtn=$('adminAddBotBtn'),adminClearBotsBtn=$('adminClearBotsBtn'),adminClanLimitInput=$('adminClanLimitInput'),adminSetClanLimitBtn=$('adminSetClanLimitBtn'),adminClearClanBtn=$('adminClearClanBtn'),adminResetHistory=$('adminResetHistory'),adminResetAccount=$('adminResetAccount'),adminStatus=$('adminStatus');
+var adminMyBotName=$('adminMyBotName'),adminMyBotLevel=$('adminMyBotLevel'),adminMyBotMmr=$('adminMyBotMmr'),adminCreateMyBot=$('adminCreateMyBot'),adminDeleteMyBot=$('adminDeleteMyBot'),adminMyBotStatus=$('adminMyBotStatus'),adminMyBotRank=$('adminMyBotRank');
+
+var selectedCheckType=1,activeAchTab='common',tempAvatar=null,tempClanAvatar=null,popupCurrentItem=null;
+var selectedDiff='easy',selectedClanMember=null,viewingProfile=null,currentRoom=null;
+var diffChances={easy:0.7,normal:0.5,hard:0.3};
+    function updateUI(){
+  nickDisplay.textContent=data.nick;
+  idDisplay.textContent=data.playerId;
+  levelDisplay.textContent='Ур. '+data.level;
+  if(clanTagInline){if(data.myClan&&data.myClan.tag){clanTagInline.textContent='['+data.myClan.tag+']';clanTagInline.style.display='inline';}else clanTagInline.style.display='none';}
+  var need=getXpForLevel();
+  xpDisplay.textContent=data.xp+' / '+need+' XP';
+  xpBarFill.style.width=Math.min(100,(data.xp/need)*100)+'%';
+  coinsDisplay.textContent=data.coins;
+  diamondsDisplay.textContent=data.diamonds;
+  winsCount.textContent=data.wins;lossesCount.textContent=data.losses;
+  if(botNameInput)botNameInput.value=data.botName;
+  checkDisplayGold.style.display='none';checkDisplayGreen.style.display='none';checkDisplayRed.style.display='none';checkDisplayStar.style.display='none';
+  var myCheck=data.adminChecks[data.playerId]||0;
+  if(myCheck===1)checkDisplayGold.style.display='inline';
+  else if(myCheck===2)checkDisplayGreen.style.display='inline';
+  else if(myCheck===3)checkDisplayRed.style.display='inline';
+  else if(myCheck===5)checkDisplayStar.style.display='inline';
+  if(data.avatar)playerAvatar.src=data.avatar;
+  applyFrameToElement(playerAvatar,data.equippedFrame);
+  if(data.showTitle&&data.selectedTitle){
+    var a=null;for(var i=0;i<ACHIEVEMENTS.length;i++){if(ACHIEVEMENTS[i].id===data.selectedTitle){a=ACHIEVEMENTS[i];break;}}
+    if(a&&data.completedAchievements.indexOf(a.id)!==-1){titleDisplay.style.display='block';titleDisplay.className='ach-'+a.rarity;titleText.textContent='🏅 '+a.name;}
+    else{titleDisplay.style.display='none';titleDisplay.className='';}
+  }else{titleDisplay.style.display='none';titleDisplay.className='';}
+  var v='V '+(data.gameVersion||'1.06 Online');
+  if(versionLoading)versionLoading.textContent=v;
+  if(settingsVersion)settingsVersion.textContent=v;
+  if(titleToggleBtn)titleToggleBtn.classList.toggle('active',!!data.showTitle);
+  checkFrameUnlocks();renderMedalSlots();renderRank();renderInventory();renderAchievements();renderTitleSelector();updateRankedBlock();checkAchievements();updateAuthorUI();
+}
+function updateRankedBlock(){
+  var el=$('rankedResult');if(!el)return;
+  if(!data.calibrationDone)el.innerHTML='<div style="color:#88ddff;font-size:12px;">Калибровка: '+data.calibrationGames+'/10</div>';
+  else{var cur=getCurrentRankObj();el.innerHTML='<div style="color:#ffd700;font-size:12px;">'+cur.emoji+' '+cur.name+' · '+data.mmr+' ММР</div>';}
+}
+function checkAchievements(){
+  var ch=false;
+  for(var i=0;i<ACHIEVEMENTS.length;i++){
+    var a=ACHIEVEMENTS[i];
+    if(data.completedAchievements.indexOf(a.id)===-1&&a.condition(data)){
+      data.completedAchievements.push(a.id);
+      if(a.reward>0){data.coins+=a.reward;showToast('🏆 '+a.name+' +'+a.reward+'🪙','#ffd700',3000);}
+      else showToast('🏆 '+a.name,'#ffd700',3000);
+      ch=true;
+    }
+  }
+  if(ch){saveData();renderAchievements();renderTitleSelector();}
+}
+function renderRank(){
+  if(!rankIconCircle)return;
+  if(!data.calibrationDone&&!data.adminRankOverride){
+    rankIconCircle.textContent='🔒';rankIconCircle.className='rank-icon-circle calibration';
+    rankSingleName.textContent='Калибровка';rankSingleSub.textContent='Сколько сыграно: '+data.calibrationGames+'/10';rankSingleMmr.textContent='';
+  }else{
+    var cur=getCurrentRankObj();
+    rankIconCircle.textContent=cur.emoji;rankIconCircle.className='rank-icon-circle '+cur.cls;
+    rankSingleName.textContent=cur.name;rankSingleSub.textContent='Ранг';rankSingleMmr.textContent=data.mmr+' ММР';
+  }
+}
+function renderAchievements(){
+  var cats={common:[],rare:[],epic:[],legendary:[],mythic:[],dev:[],secret:[]};
+  for(var i=0;i<ACHIEVEMENTS.length;i++){var a=ACHIEVEMENTS[i];if(cats[a.rarity])cats[a.rarity].push(a);}
+  var items=cats[activeAchTab]||[];
+  var html='';
+  if(items.length===0)html+='<div style="color:#ff8844;text-align:center;padding:20px;">Нет достижений</div>';
+  for(var j=0;j<items.length;j++){
+    var it=items[j];var done=data.completedAchievements.indexOf(it.id)!==-1;
+    var achClass='ach-'+it.rarity+(done?' completed':'');
+    var name=(it.rarity==='secret'&&!done)?'???':it.name;
+    var desc=(it.rarity==='secret'&&!done)?'???':it.desc;
+    var status=done?'✅':'⏳';
+    html+='<div class="achievement-item '+achClass+'"><div class="ach-info"><div class="ach-name">'+name+'</div><div class="ach-desc">'+desc+'</div></div><div class="ach-status">'+status+'</div></div>';
+  }
+  achievementsContent.innerHTML=html;
+}
+var achTabBtns=document.querySelectorAll('.ach-tab-btn');
+for(var _i=0;_i<achTabBtns.length;_i++){
+  (function(tab){tab.addEventListener('click',function(){
+    for(var k=0;k<achTabBtns.length;k++)achTabBtns[k].classList.remove('active');
+    this.classList.add('active');activeAchTab=this.getAttribute('data-ach-tab');renderAchievements();
+  });})(achTabBtns[_i]);
+}
+function renderTitleSelector(){
+  if(!titleSelector)return;
+  var done=[];for(var i=0;i<ACHIEVEMENTS.length;i++){if(data.completedAchievements.indexOf(ACHIEVEMENTS[i].id)!==-1)done.push(ACHIEVEMENTS[i]);}
+  if(done.length===0){titleSelector.innerHTML='<div style="color:#ff8844;text-align:center;padding:10px;font-size:12px;">Пока нет достижений</div>';return;}
+  var html='';
+  for(var j=0;j<done.length;j++){var a=done[j];var active=data.selectedTitle===a.id;
+    html+='<div class="title-option ach-'+a.rarity+(active?' active':'')+'" data-title="'+a.id+'"><span class="title-name">'+a.name+'</span><span class="title-check">'+(active?'✅':'')+'</span></div>';}
+  titleSelector.innerHTML=html;
+  var opts=titleSelector.querySelectorAll('.title-option');
+  for(var k=0;k<opts.length;k++){
+    (function(opt){opt.addEventListener('click',function(){
+      var tid=this.getAttribute('data-title');
+      data.selectedTitle=(data.selectedTitle===tid)?null:tid;
+      if(data.selectedTitle)data.showTitle=true;
+      saveData();renderTitleSelector();updateUI();
+      showToast(data.selectedTitle?'✅ Титул установлен!':'❌ Титул убран!',data.selectedTitle?'#44ff88':'#ff8844',1500);
+    });})(opts[k]);
+  }
+}
+function getMedalClassByRarity(r){if(r==='secret')return 'medal-secret';if(r==='mythic')return 'medal-mythic';if(r==='dev')return 'medal-dev';if(r==='legendary')return 'medal-legendary';if(r==='epic')return 'medal-epic';if(r==='rare')return 'medal-rare';return 'medal-common';}
+function renderMedalSlots(){
+  if(!profileMedalsRow)return;
+  var slots=profileMedalsRow.querySelectorAll('.medal-slot-mini');
+  for(var i=0;i<slots.length;i++){
+    var slot=slots[i];slot.className='medal-slot-mini';slot.textContent='';
+    var achId=data.equippedMedals[i];
+    if(achId){var ach=null;for(var j=0;j<ACHIEVEMENTS.length;j++){if(ACHIEVEMENTS[j].id===achId){ach=ACHIEVEMENTS[j];break;}}
+      if(ach){slot.classList.add('filled',getMedalClassByRarity(ach.rarity));slot.textContent='🏅';}}
+    else slot.classList.add('empty');
+  }
+}
+function renderMedalSelector(){
+  if(!medalSelector)return;
+  var done=[];for(var i=0;i<ACHIEVEMENTS.length;i++){if(data.completedAchievements.indexOf(ACHIEVEMENTS[i].id)!==-1)done.push(ACHIEVEMENTS[i]);}
+  if(done.length===0){medalSelector.innerHTML='<div style="color:#ff8844;grid-column:1/-1;text-align:center;padding:10px;font-size:12px;">Пока нет достижений</div>';return;}
+  var html='';
+  for(var j=0;j<done.length;j++){var a=done[j];var eq=data.equippedMedals.indexOf(a.id)!==-1;
+    html+='<div data-medal="'+a.id+'" style="padding:8px;border-radius:10px;border:2px solid '+(eq?'#44ff88':'#8a5a1a')+';background:rgba(26,18,8,0.6);text-align:center;cursor:pointer;"><div style="font-size:20px;">🏅</div><div style="font-size:10px;color:#ffaa44;margin-top:4px;">'+a.name+'</div><div style="font-size:10px;color:'+(eq?'#44ff88':'#888')+';">'+(eq?'✅':'Надеть')+'</div></div>';}
+  medalSelector.innerHTML=html;
+  var els=medalSelector.querySelectorAll('[data-medal]');
+  for(var k=0;k<els.length;k++){
+    (function(el){el.addEventListener('click',function(){
+      var id=this.getAttribute('data-medal');
+      var idx=data.equippedMedals.indexOf(id);
+      if(idx!==-1){data.equippedMedals.splice(idx,1);showToast('❌ Медаль снята','#ff8844',1500);}
+      else{if(data.equippedMedals.length>=5){showToast('⚠️ Максимум 5 медалей!','#ff8844',2000);return;}data.equippedMedals.push(id);showToast('🏅 Медаль надета','#44ff88',1500);}
+      saveData();renderMedalSlots();renderMedalSelector();
+    });})(els[k]);
+  }
+}
+function getRandomPrice(r){var p=RARITY_PRICE[r];if(!p)return 100;if(p[0]===p[1])return p[0];return Math.floor(Math.random()*(p[1]-p[0]+1))+p[0];}
+function getItemPrice(id){
+  if(id==='TM')return 0;
+  var it=ITEMS[id];if(!it)return 10;
+  var key='sr_price_'+id;
+  if(!localStorage.getItem(key))localStorage.setItem(key,getRandomPrice(it.rarity));
+  return parseInt(localStorage.getItem(key))||10;
+}
+function renderInventory(){
+  if(data.inventory.length===0 && (!data.fragments || Object.keys(data.fragments).every(k => data.fragments[k] === 0))){inventoryGrid.innerHTML='';inventoryEmpty.style.display='block';}
+  else { inventoryEmpty.style.display='none'; }
+  
+  var html='';
+  if(data.fragments){
+    var fragsMap = {
+      'common': { name:'⚪ Обычный', emoji:'🧩', color:'#888' },
+      'rare': { name:'🔵 Редкий', emoji:'🧩', color:'#4488ff' },
+      'epic': { name:'🟣 Эпик', emoji:'🧩', color:'#aa44ff' },
+      'legendary': { name:'🟠 Легендарный', emoji:'🧩', color:'#ff8800' },
+      'arcane': { name:'🔴 Аркана', emoji:'🧩', color:'#ff2244' },
+      'nemeless': { name:'🟡 Немелесс', emoji:'🧩', color:'#ffdd00' }
+    };
+    for (var rar in data.fragments) {
+      if (data.fragments[rar] > 0 && fragsMap[rar]) {
+        var f = fragsMap[rar];
+        html += '<div class="inventory-item" style="border-color:'+f.color+'" onclick="openFragmentPopup(\''+rar+'\')"><span class="i-count">' + data.fragments[rar] + '/10</span><div class="i-emoji">' + f.emoji + '</div><div class="i-name">Фрагмент</div><div class="i-rarity" style="color:'+f.color+'">' + f.name + '</div></div>';
+      }
+    }
+  }
+  var counts={};
+  for(var i=0;i<data.inventory.length;i++){var it=data.inventory[i];var k=it.id||it.name;if(!counts[k])counts[k]={id:it.id,name:it.name,rarity:it.rarity,emoji:it.emoji,count:0};counts[k].count++;}
+  for(var key in counts){
+    if(!counts.hasOwnProperty(key))continue;
+    var item=counts[key];var isEq=data.equipped===key;
+    html+='<div class="inventory-item '+item.rarity+(isEq?' equipped':'')+'" data-item="'+key+'">'+(isEq?'<span class="equipped-mark">✓</span>':'')+'<span class="i-count">×'+item.count+'</span><div class="i-emoji">'+(item.emoji||'📦')+'</div><div class="i-name">'+item.name+'</div><div class="i-rarity">'+RARITY_NAMES[item.rarity]+'</div></div>';
+  }
+  inventoryGrid.innerHTML=html;
+  var cells=inventoryGrid.querySelectorAll('[data-item]');
+  for(var c=0;c<cells.length;c++){(function(cell){cell.addEventListener('click',function(){openItemPopup(this.getAttribute('data-item'));});})(cells[c]);}
+}
+window.openFragmentPopup = function(rarity) {
+  var fragsMap = {
+      'common': { name:'Обычный', emoji:'⚪' },
+      'rare': { name:'Редкий', emoji:'🔵' },
+      'epic': { name:'Эпический', emoji:'🟣' },
+      'legendary': { name:'Легендарный', emoji:'🟠' },
+      'arcane': { name:'Аркана', emoji:'🔴' },
+      'nemeless': { name:'Немелесс', emoji:'🟡' }
+  };
+  var count = data.fragments[rarity] || 0;
+  var f = fragsMap[rarity];
+  
+  itemPopupEmoji.textContent = '🧩';
+  itemPopupName.textContent = 'Фрагмент: ' + f.name;
+  itemPopupRarity.textContent = count + ' / 10 шт.';
+  itemPopupRarity.className = 'item-popup-rarity ' + rarity;
+  itemPopupCount.textContent = 'Соберите 10 штук, чтобы открыть предмет.';
+  
+  itemPopupEquipBtn.style.display = 'none';
+  itemPopupSellBtn.style.display = 'flex';
+  itemPopupSellBtn.textContent = '🎁 ОТКРЫТЬ ПРЕДМЕТ';
+  itemPopupSellBtn.className = 'item-popup-btn equip';
+  
+  if (count >= 10) {
+    itemPopupSellBtn.disabled = false;
+    itemPopupSellBtn.onclick = function() {
+      data.fragments[rarity] -= 10;
+      var pool = [];
+      for(var k in ITEMS) { if(ITEMS[k].rarity === rarity && k !== 'TM') pool.push([k, ITEMS[k]]); }
+      var pick = pool[Math.floor(Math.random() * pool.length)];
+      if(pick) {
+        data.inventory.push({id: pick[0], name: pick[1].name, rarity: pick[1].rarity, emoji: pick[1].emoji});
+        showToast('🎉 Получен: ' + pick[1].emoji + ' ' + pick[1].name, '#44ff88', 3000);
+      }
+      saveData(); renderInventory(); updateUI(); closeItemPopup();
+    };
+  } else {
+    itemPopupSellBtn.disabled = true;
+    itemPopupSellBtn.textContent = '❌ НУЖНО 10 ШТ';
+    itemPopupSellBtn.onclick = null;
+  }
+  itemPopupModal.classList.add('active');
+};
+
+function openItemPopup(itemKey){
+  var items=[];for(var i=0;i<data.inventory.length;i++){if((data.inventory[i].id||data.inventory[i].name)===itemKey)items.push(data.inventory[i]);}
+  if(items.length===0)return;
+  var item=items[0];var itemDef=ITEMS[itemKey]||item;
+  popupCurrentItem=itemKey;
+  itemPopupEmoji.textContent=item.emoji||'📦';
+  itemPopupName.textContent=item.name;
+  itemPopupRarity.textContent=RARITY_NAMES[item.rarity]||item.rarity;
+  itemPopupRarity.className='item-popup-rarity '+item.rarity;
+  itemPopupCount.textContent=items.length>1?('У тебя: '+items.length+' шт.'):'';
+  var isEq=data.equipped===itemKey;
+  itemPopupEquipBtn.style.display = 'flex';
+  itemPopupSellBtn.style.display = 'flex';
+  itemPopupSellBtn.className = 'item-popup-btn sell';
+  
+  if(isEq){itemPopupEquipBtn.textContent='🔄 СНЯТЬ';itemPopupEquipBtn.className='item-popup-btn unequip';}
+  else{itemPopupEquipBtn.textContent='🎯 НАДЕТЬ';itemPopupEquipBtn.className='item-popup-btn equip';}
+  
+  if(itemDef.noSell)itemPopupSellBtn.style.display='none';
+  else{var sp=Math.floor((getItemPrice(itemKey)||10)*0.3);itemPopupSellBtn.textContent='💰 Продать 🪙 '+sp;}
+  
+  itemPopupSellBtn.onclick = function() {
+      if(!popupCurrentItem)return;
+      var idx=-1;for(var i=0;i<data.inventory.length;i++){if((data.inventory[i].id||data.inventory[i].name)===popupCurrentItem){idx=i;break;}}
+      if(idx===-1)return;
+      var def=ITEMS[popupCurrentItem]||data.inventory[idx];
+      if(def.noSell){showToast('⚠️ Нельзя продать!','#ff8844',2000);return;}
+      var price=Math.floor((getItemPrice(popupCurrentItem)||10)*0.3);
+      data.coins+=price;data.inventory.splice(idx,1);
+      var stillHas=false;for(var j=0;j<data.inventory.length;j++){if((data.inventory[j].id||data.inventory[j].name)===popupCurrentItem)stillHas=true;}
+      if(data.equipped===popupCurrentItem&&!stillHas)data.equipped=null;
+      saveData();renderInventory();updateUI();closeItemPopup();
+      showToast('💰 Продано за 🪙'+price,'#ffd700',2000);
+  };
+  itemPopupModal.classList.add('active');
+}
+function closeItemPopup(){itemPopupModal.classList.remove('active');popupCurrentItem=null;}
+itemPopupModal.addEventListener('click',function(e){if(e.target===itemPopupModal)closeItemPopup();});
+itemPopupEquipBtn.addEventListener('click',function(){
+  if(!popupCurrentItem)return;
+  if(data.equipped===popupCurrentItem){data.equipped=null;showToast('🔄 Предмет снят','#ff8844',1500);}
+  else{data.equipped=popupCurrentItem;showToast('🎯 Предмет надет','#44ff88',1500);}
+  saveData();renderInventory();updateUI();closeItemPopup();
+});
+sellAllBtn.addEventListener('click',function(){
+  if(data.inventory.length===0){showToast('⚠️ Инвентарь пуст!','#ff8844',2000);return;}
+  var total=0;var keep=[];
+  for(var i=0;i<data.inventory.length;i++){
+    var item=data.inventory[i];var def=ITEMS[item.id||item.name]||item;
+    if(def.noSell){keep.push(item);continue;}
+    total+=Math.floor((getItemPrice(item.id||item.name)||10)*0.3);
+  }
+  data.inventory=keep;
+  if(data.equipped&&!keep.some(function(x){return (x.id||x.name)===data.equipped;}))data.equipped=null;
+  data.coins+=total;saveData();updateUI();
+  showToast('💰 Продано всё! +🪙'+total,'#ffd700',2000);
+});
+function rollItem(type){
+  var r=Math.random()*100;var pool=[];
+  if(type==='normal'){var rar;if(r<70)rar='common';else if(r<90)rar='rare';else if(r<98)rar='epic';else rar='legendary';
+    for(var k in ITEMS){if(ITEMS.hasOwnProperty(k)&&ITEMS[k].rarity===rar&&k!=='TM')pool.push([k,ITEMS[k]]);}}
+  else{if(r<80)return null;if(r<95){for(var k2 in ITEMS){if(ITEMS.hasOwnProperty(k2)&&ITEMS[k2].rarity==='legendary')pool.push([k2,ITEMS[k2]]);}}else{for(var k3 in ITEMS){if(ITEMS.hasOwnProperty(k3)&&ITEMS[k3].rarity==='nemeless')pool.push([k3,ITEMS[k3]]);}}}
+  if(pool.length===0)return null;
+  var pick=pool[Math.floor(Math.random()*pool.length)];
+  return {id:pick[0],name:pick[1].name,rarity:pick[1].rarity,emoji:pick[1].emoji};
+}
+function runCaseAnimation(type,count){
+  caseResultItems.innerHTML='<div style="text-align:center;color:#ffaa44;font-size:14px;font-family:\'Courier New\',monospace;padding:16px;">🔄 Открываем...</div>';
+  caseResultModal.style.display='flex';
+  setTimeout(function(){
+    var results=[];
+    for(var i=0;i<count;i++){var rr=rollItem(type);if(rr){data.inventory.push(rr);results.push(rr);}else results.push({name:'❌',rarity:'common',emoji:'❌',empty:true});}
+    saveData();updateUI();
+    var html='';
+    for(var j=0;j<results.length;j++){var it=results[j];
+      if(it.empty)html+='<div style="padding:8px;border-radius:10px;border:1px solid #888;margin-bottom:5px;text-align:center;"><div style="color:#ffaa44;font-size:13px;">❌ Пусто</div></div>';
+      else html+='<div style="padding:8px;border-radius:10px;border:1px solid #8a5a1a;margin-bottom:5px;text-align:center;"><div style="font-size:13px;font-weight:bold;color:#ffaa44;">'+it.emoji+' '+it.name+'</div><div style="color:#ffaa44;font-size:10px;">'+RARITY_NAMES[it.rarity]+'</div></div>';
+    }
+    caseResultItems.innerHTML=html;
+  },1500);
+}
+caseResultClose.addEventListener('click',function(){caseResultModal.style.display='none';});
+buyNormalCaseBtn.addEventListener('click',function(){if(data.coins<250){showToast('⚠️ Нужно 250🪙!','#ff8844',2000);return;}data.coins-=250;saveData();updateUI();showToast('📦 Открываем Обычный ящик...','#ffd700',1500);runCaseAnimation('normal',1);});
+buyLegendaryCaseBtn.addEventListener('click',function(){if(data.coins<1500){showToast('⚠️ Нужно 1500🪙!','#ff8844',2000);return;}data.coins-=1500;saveData();updateUI();showToast('💎 Открываем Легендарный ящик...','#ff2244',1500);runCaseAnimation('legendary',1);});
+function renderMarket(){
+  if(!marketGrid)return;
+  var all=[];for(var k in ITEMS){if(ITEMS.hasOwnProperty(k)&&k!=='TM')all.push({id:k,name:ITEMS[k].name,rarity:ITEMS[k].rarity,emoji:ITEMS[k].emoji,price:getItemPrice(k)});}
+  for(var i=all.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=all[i];all[i]=all[j];all[j]=tmp;}
+  var html='';
+  for(var n=0;n<all.length;n++){var it=all[n];
+    html+='<div class="market-item '+it.rarity+'" data-market="'+it.id+'"><div class="m-emoji">'+it.emoji+'</div><div class="m-name">'+it.name+'</div><div class="m-rarity">'+RARITY_NAMES[it.rarity]+'</div><div class="m-price">🪙 '+it.price+'</div></div>';}
+  marketGrid.innerHTML=html;
+  var cells=marketGrid.querySelectorAll('[data-market]');
+  for(var c=0;c<cells.length;c++){(function(cell){cell.addEventListener('click',function(){
+    var id=this.getAttribute('data-market');var item=ITEMS[id];if(!item)return;
+    var price=getItemPrice(id);
+    if(data.coins<price){showToast('⚠️ Недостаточно монет!','#ff8844',2000);return;}
+    data.coins-=price;data.inventory.push({id:id,name:item.name,rarity:item.rarity,emoji:item.emoji});
+    saveData();updateUI();showToast('✅ Куплен '+item.emoji+' '+item.name,'#44ff88',2000);
+  });})(cells[c]);}
+}
+function renderProfile(){
+  if(viewingProfile){renderProfileFromViewing();return;}
+  if(profileAvatar&&data.avatar)profileAvatar.src=data.avatar;
+  applyFrameToElement(profileAvatar,data.equippedFrame);
+  if(profileNick){if(data.myClan&&data.myClan.tag)profileNick.innerHTML='<span style="color:#888;font-family:\'Courier New\',monospace;font-size:16px;">['+data.myClan.tag+']</span> '+data.nick;else profileNick.textContent=data.nick;}
+  if(profileId)profileId.textContent=data.playerId;
+  if(profileLevel)profileLevel.textContent='Ур. '+data.level;
+  if(profileStatus){var st=getCurrentStatus();profileStatus.textContent=getStatusText(st);profileStatus.className='profile-status '+st;}
+  if(profileRankName&&profileRankMmr){
+    if(!data.calibrationDone&&!data.adminRankOverride){profileRankName.textContent='Калибровка';profileRankName.style.color='#888';profileRankMmr.textContent=data.calibrationGames+'/10';}
+    else{var cur=getCurrentRankObj();profileRankName.textContent=cur.name;profileRankName.style.color='#ff8800';profileRankMmr.textContent=data.mmr+' ММР';}
+  }
+  var total=data.wins+data.losses;var wr=total>0?Math.round((data.wins/total)*100):0;
+  if(profileWinrate)profileWinrate.textContent=wr+'%';
+  if(profileWinrateCircle)profileWinrateCircle.style.background='conic-gradient(#ff8800 '+wr+'%, #2a1a0a '+wr+'%)';
+  if(profileTotalMatches)profileTotalMatches.textContent=total;
+  if(profilePlaytime)profilePlaytime.textContent=formatTime(data.totalTime||0);
+  if(detailWins)detailWins.textContent=data.wins;
+  if(detailLosses)detailLosses.textContent=data.losses;
+  if(detailTotal)detailTotal.textContent=total;
+  if(detailWinrate)detailWinrate.textContent=wr+'%';
+  if(detailBotWins)detailBotWins.textContent=data.botWins||0;
+  if(detailRankedWins)detailRankedWins.textContent=data.rankedWins||0;
+  if(detailMaxMmr)detailMaxMmr.textContent=(data.maxMmr||0)+' ММР';
+  if(detailCalib)detailCalib.textContent=data.calibrationDone?'Пройдена ✅':data.calibrationGames+'/10';
+  if(detailPlaytime)detailPlaytime.textContent=formatTime(data.totalTime||0);
+  renderProfileItems();renderMatchHistory();renderMedalSlots();renderMyBotBlock();
+}
+function renderProfileItems(){
+  if(!profileItemsList)return;
+  var keys=[];for(var k in data.itemMatches){if(data.itemMatches.hasOwnProperty(k)&&data.itemMatches[k]>0&&ITEMS[k])keys.push(k);}
+  if(keys.length===0){profileItemsList.innerHTML='<div class="profile-items-empty">Пока ничего не надето</div>';return;}
+  keys.sort(function(a,b){return data.itemMatches[b]-data.itemMatches[a];});
+  var html='';
+  for(var i=0;i<keys.length;i++){var key=keys[i];var count=data.itemMatches[key];var item=ITEMS[key];
+    html+='<div class="profile-item-row '+item.rarity+'"><span class="profile-item-name">'+item.emoji+' '+item.name+'</span><span class="profile-item-count">'+count+' матч(ей)</span></div>';}
+  profileItemsList.innerHTML=html;
+}
+function renderMatchHistory(){
+  if(!matchHistoryList)return;
+  if(!data.matchHistory||data.matchHistory.length===0){matchHistoryList.innerHTML='<div class="match-history-empty">Пока нет сыгранных матчей</div>';return;}
+  var html='';
+  for(var i=0;i<data.matchHistory.length;i++){var m=data.matchHistory[i];
+    var typeLabel=m.type==='bot'?'🤖 Бот-файт':(m.type==='team'?'⚔️ Командный':'🏆 Ранговый');
+    var resultLabel=m.win?'Победа':'Поражение';var resultClass=m.win?'win':'lose';
+    html+='<div class="match-history-item '+resultClass+'"><div class="match-history-left"><div class="match-history-type">'+typeLabel+'</div><div class="match-history-result '+resultClass+'">'+resultLabel+'</div></div><div class="match-history-date">'+m.date+'</div></div>';}
+  matchHistoryList.innerHTML=html;
+}
+for(var _p=0;_p<profileNavBtns.length;_p++){(function(btn){btn.addEventListener('click',function(){
+  for(var k=0;k<profileNavBtns.length;k++)profileNavBtns[k].classList.remove('active');
+  this.classList.add('active');
+  for(var j=0;j<profilePanes.length;j++)profilePanes[j].classList.remove('active');
+  var t=this.getAttribute('data-profile-tab');
+  if(t==='general')$('profileGeneral').classList.add('active');
+  if(t==='detailed')$('profileDetailed').classList.add('active');
+  if(t==='history')$('profileHistory').classList.add('active');
+  if(viewingProfile)renderProfileFromViewing();else renderProfile();
+});})(profileNavBtns[_p]);}
+
+function renderMyBotBlock(){
+  var empty=$('myBotEmpty'),info=$('myBotInfo');
+  if(!empty||!info)return;
+  if(!data.myBots||data.myBots.length===0){empty.style.display='block';info.style.display='none';return;}
+  empty.style.display='none';info.style.display='block';
+  var bot=data.myBots[0];
+  info.innerHTML='<div class="profile-item-row"><span class="profile-item-name">🤖 '+bot.name+'</span><span class="profile-item-count">Ур. '+bot.level+' · '+bot.mmr+' ММР</span></div>';
+}
+function renderAdminMyBot(){
+  if(!adminMyBotStatus)return;
+  if(!data.myClan) { adminMyBotStatus.textContent='⚠️ Извините, у вас нет клана. Создайте или войдите!'; adminMyBotStatus.style.color='#ff8844'; return; }
+  if(!data.myBots || data.myBots.length===0){ adminMyBotStatus.textContent='Нет бота'; adminMyBotStatus.style.color='#888'; return; }
+  var b=data.myBots[0];
+  adminMyBotStatus.textContent='✅ '+b.name+' · Ур. '+b.level+' · '+b.mmr+' ММР (в клане)';
+  adminMyBotStatus.style.color='#44ff88';
+}
+adminCreateMyBot.addEventListener('click',function(){
+  if(!data.myClan){ showToast('❌ Извините, у вас нет клана. Создайте или войдите!','#ff4444',3000); return; }
+  var name=adminMyBotName.value.trim()||('MyBot_'+Math.floor(Math.random()*999));
+  var lvl=parseInt(adminMyBotLevel.value)||50;
+  var mmr=parseInt(adminMyBotMmr.value)||1000;
+  var rk=adminMyBotRank.value||'member';
+  lvl=Math.max(1,Math.min(600,lvl));mmr=Math.max(0,mmr);
+
+  if(data.myClan.members.length >= data.myClan.limit){
+    showToast('❌ В клане нет места, расширьте лимит!','#ff4444',3000); return;
+  }
+
+  var newBot = {name:name, level:lvl, mmr:mmr, rank:rk, isBot:true, status:'online', statusText:'В сети', joinedAt:Date.now(), avatar:null, items:generateBotItems()};
+  data.myBots=[newBot];
+  data.myClan.members.push(newBot);
+
+  saveData(); renderAdminMyBot(); renderMyClanFull(); renderMyClanMembers();
+  showToast('✅ Бот '+name+' создан и добавлен в клан!','#44ff88',2500);
+});
+adminDeleteMyBot.addEventListener('click',function(){
+  if(!data.myBots||data.myBots.length===0){showToast('⚠️ Нет бота','#ff8844',2000);return;}
+  if(data.myClan){
+    data.myClan.members = data.myClan.members.filter(function(m){return m.name !== data.myBots[0].name;});
+  }
+  data.myBots=[];saveData();renderAdminMyBot();renderMyBotBlock();renderMyClanFull();renderMyClanMembers();
+  showToast('🗑️ Бот удалён','#ff8844',2000);
+});
+
+function getRandomOnlineTime(){var r=Math.random();if(r<0.4)return{status:'online',text:'В сети'};if(r<0.7){var s=30+Math.floor(Math.random()*270);return{status:'away',text:'Был(а) '+Math.floor(s/60)+' мин назад'};}var secs=300+Math.floor(Math.random()*604500);var min=Math.floor(secs/60);var hrs=Math.floor(min/60);var days=Math.floor(hrs/24);var text=days>0?days+' дн. назад':hrs>0?hrs+' ч. назад':min+' мин. назад';return{status:'offline',text:'Был(а) '+text};}
+function generateBotItems(){
+  var ids=[];for(var k in ITEMS){if(ITEMS.hasOwnProperty(k)&&k!=='TM')ids.push(k);}
+  var count=1+Math.floor(Math.random()*3);ids.sort(function(){return Math.random()-0.5;});
+  var res={};for(var i=0;i<count;i++){res[ids[i]]=1+Math.floor(Math.random()*30);}return res;
+}
+function generateBot(){
+  var name=BOT_NAMES[Math.floor(Math.random()*BOT_NAMES.length)];var on=getRandomOnlineTime();
+  return{name:name,rank:'member',isBot:true,status:on.status,statusText:on.text,joinedAt:Date.now()-Math.floor(Math.random()*86400000*30),avatar:null,mmr:500+Math.floor(Math.random()*1500),level:1+Math.floor(Math.random()*100),items:generateBotItems()};
+}
+
+// === ЛИДЕРЫ ТОП-200 (ИЗ БАЗЫ) ===
+var currentLeaderTab = 'mmr';
+async function renderLeaders() {
+    var list = $('leadersList'); if (!list) return;
+    list.innerHTML = '<div style="color:#ff8844;text-align:center;padding:20px;font-family:\'Courier New\',monospace;">Загрузка из облака...</div>';
+    
+    var col = currentLeaderTab === 'mmr' ? 'mmr' : currentLeaderTab === 'coins' ? 'coins' : currentLeaderTab === 'diamonds' ? 'diamonds' : 'level';
+    var { data: top, error } = await sb.from('profiles').select('*').order(col, { ascending: false }).limit(200);
+
+    if (error || !top) { list.innerHTML = '<div style="color:#ff4444;text-align:center;padding:20px;">Ошибка загрузки</div>'; return; }
+
+    var header = $('leadersHeader');
+    if (currentLeaderTab === 'mmr') header.innerHTML = '<span>#</span><span>Игрок</span><span style="text-align:center;">Ранг</span><span style="text-align:right;">ММР</span>';
+    else if (currentLeaderTab === 'coins') header.innerHTML = '<span>#</span><span>Игрок</span><span style="text-align:center;">Ур.</span><span style="text-align:right;">Монеты</span>';
+    else if (currentLeaderTab === 'diamonds') header.innerHTML = '<span>#</span><span>Игрок</span><span style="text-align:center;">Ур.</span><span style="text-align:right;">Алмазы</span>';
+    else if (currentLeaderTab === 'level') header.innerHTML = '<span>#</span><span>Игрок</span><span style="text-align:center;">Клан</span><span style="text-align:right;">Уровень</span>';
+
+    var html = '';
+    for (var j = 0; j < top.length; j++) {
+        var p = top[j];
+        var place = j === 0 ? '🥇' : j === 1 ? '🥈' : j === 2 ? '🥉' : (j + 1);
+        var av = p.avatar ? '<img src="' + p.avatar + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">' : '👤';
+        var isMe = p.id === currentUser.id;
+        var ms = isMe ? 'border:1px solid #44ff88;background:rgba(68,255,136,0.1);' : '';
+        var rightCol1 = ''; var rightCol2 = '';
         
-        if (error) console.error('Ошибка сохранения:', error);
-    }, 1000); // Сохраняем через 1 секунду после последнего действия
+        if (currentLeaderTab === 'mmr') {
+            var rank = getRankObjByMmr(p.mmr);
+            rightCol1 = '<span style="text-align:center;color:#ff8800;font-size:12px;font-family:\'Arial Black\',sans-serif;">' + rank.emoji + ' ' + rank.name + '</span>';
+            rightCol2 = '<span style="text-align:right;color:#ffd700;font-weight:bold;font-family:\'Courier New\',monospace;">' + p.mmr + '</span>';
+        } else if (currentLeaderTab === 'coins') {
+            rightCol1 = '<span style="text-align:center;color:#888;font-size:12px;">Ур. ' + p.level + '</span>';
+            rightCol2 = '<span style="text-align:right;color:#ffd700;font-weight:bold;font-family:\'Courier New\',monospace;">🪙 ' + p.coins + '</span>';
+        } else if (currentLeaderTab === 'diamonds') {
+            rightCol1 = '<span style="text-align:center;color:#888;font-size:12px;">Ур. ' + p.level + '</span>';
+            rightCol2 = '<span style="text-align:right;color:#44ddff;font-weight:bold;font-family:\'Courier New\',monospace;">💎 ' + p.diamonds + '</span>';
+        } else if (currentLeaderTab === 'level') {
+            rightCol1 = '<span style="text-align:center;color:#888;font-size:12px;font-family:\'Courier New\',monospace;">—</span>';
+            rightCol2 = '<span style="text-align:right;color:#ffaa44;font-weight:bold;font-family:\'Courier New\',monospace;">Ур. ' + p.level + '</span>';
+        }
+        
+        html += '<div class="clan-list-row" style="grid-template-columns:40px 1fr 100px 80px;' + ms + '">' +
+       '<span style="color:#ffd700;font-weight:bold;font-family:\'Courier New\',monospace;">' + place + '</span>' +
+            '<div style="display:flex;align-items:center;gap:8px;min-width:0;">' + av + 
+            '<span style="color:#fff;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + p.nick + (isMe ? ' (Ты)' : '') + '</span></div>' +
+            rightCol1 + rightCol2 + '</div>';
+    }
+    list.innerHTML = html;
 }
-
-// ==========================================
-// 5. ОБНОВЛЕНИЕ ИНТЕРФЕЙСА (UI)
-// ==========================================
-function initGameUI() {
-    // Шапка
-    $('nickDisplay').textContent = data.nick;
-    $('idDisplay').textContent = data.player_id; // Наш публичный ID (1000000+)
-    $('levelDisplay').textContent = 'Ур. ' + data.level;
-    $('coinsDisplay').textContent = data.coins;
-    $('diamondsDisplay').textContent = data.diamonds;
-    
-    // Опыт
-    const needXp = 100;
-    $('xpDisplay').textContent = data.xp + ' / ' + needXp + ' XP';
-    $('xpBarFill').style.width = Math.min(100, (data.xp / needXp) * 100) + '%';
-    
-    // Аватар
-    if (data.avatar) {
-        $('playerAvatar').src = data.avatar;
-        $('profileAvatar').src = data.avatar;
-    }
-    
-    // Профиль
-    $('profileNick').textContent = data.nick;
-    $('profileId').textContent = data.player_id;
-    $('profileLevel').textContent = 'Ур. ' + data.level;
-    $('detailWins').textContent = data.wins;
-    $('detailLosses').textContent = data.losses;
-    $('detailTotal').textContent = data.wins + data.losses;
-
-    // Ранг (если калибровка пройдена)
-    if (data.calibration_done) {
-        $('rankSingleName').textContent = 'Ранг: ' + data.mmr + ' ММР';
-        $('rankSingleSub').textContent = 'Калибровка пройдена';
-        $('rankIconCircle').textContent = '🏆';
-        $('rankIconCircle').className = 'rank-icon-circle gold';
-        $('rankIconCircle').style.borderColor = '#ffd700';
-    } else {
-        $('rankSingleSub').textContent = 'Сколько сыграно: ' + data.calibration_games + '/10';
-    }
-
-    // Обработчики кнопок навигации
-    document.querySelectorAll('.side-icon').forEach(icon => {
-        icon.addEventListener('click', () => {
-            // Снимаем активный класс со всех
-            document.querySelectorAll('.side-icon').forEach(i => i.classList.remove('active'));
-            document.querySelectorAll('.menu-window').forEach(w => w.classList.remove('active'));
-            
-            // Включаем нужное
-            icon.classList.add('active');
-            const windowId = icon.getAttribute('data-window');
-            const targetWindow = $(windowId);
-            if (targetWindow) targetWindow.classList.add('active');
+var leaderTabBtns = document.querySelectorAll('.leader-tab-btn');
+for (var _lt = 0; _lt < leaderTabBtns.length; _lt++) {
+    (function(btn){
+        btn.addEventListener('click', function() {
+            for (var k = 0; k < leaderTabBtns.length; k++) leaderTabBtns[k].classList.remove('active');
+            this.classList.add('active');
+            currentLeaderTab = this.getAttribute('data-leader-tab');
+            renderLeaders();
         });
-    });
-
-    // Кнопка ИГРАТЬ
-    $('playBtn').addEventListener('click', () => {
-        document.querySelectorAll('.side-icon').forEach(i => i.classList.remove('active'));
-        document.querySelectorAll('.menu-window').forEach(w => w.classList.remove('active'));
-        $('modesWindow').classList.add('active');
-    });
-
-    // Кнопка ПРОФИЛЬ (быстрая)
-    $('profileBtn').addEventListener('click', () => {
-        document.querySelectorAll('.menu-window').forEach(w => w.classList.remove('active'));
-        $('profileWindow').classList.add('active');
-    });
+    })(leaderTabBtns[_lt]);
 }
 
-// ЗАПУСК ПРОВЕРКИ ПРИ ОТКРЫТИИ
-checkAuth();
+// ОСТАЛЬНАЯ ЛОГИКА БОЯ И КЛАНОВ
+for(var _d=0;_d<diffBtns.length;_d++){(function(btn){btn.addEventListener('click',function(){
+  for(var k=0;k<diffBtns.length;k++)diffBtns[k].classList.remove('active');
+  this.classList.add('active');selectedDiff=this.getAttribute('data-diff');
+});})(diffBtns[_d]);}
+setBotNameBtn.addEventListener('click',function(){data.botName=botNameInput.value.trim()||'Bot_001';saveData();showToast('✅ Имя бота: '+data.botName,'#ff8800',1500);});
+fightBtn.addEventListener('click',function(){
+  var chance=diffChances[selectedDiff]||0.5;var win=Math.random()<chance;
+  var diaR=0;
+  if(win){
+    var coins=Math.floor(Math.random()*50)+1;
+    var xp=Math.floor(Math.random()*20)+10;
+    diaR=1+Math.floor(Math.random()*2);
+    data.coins+=coins;data.wins++;data.botWins++;data.diamonds=(data.diamonds||0)+diaR;addXp(xp);
+    fightResult.innerHTML='<div class="result-win">🏆 '+data.botName+' Проиграл!</div><div style="color:#ffaa44;font-size:13px;margin:4px 0;">'+data.nick+' Победил!</div><div class="result-coins">+🪙 '+coins+'</div><div class="result-xp">+'+xp+' XP</div><div style="color:#44ddff;font-size:12px;">+'+diaR+' 💎</div>';
+  }else{
+    data.losses++;fightResult.innerHTML='<div class="result-lose">💀 '+data.botName+' Выиграл!</div><div style="color:#ffaa44;font-size:13px;margin:4px 0;">'+data.nick+' Проиграл...</div>';
+  }
+  addMatchToHistory('bot',win);addMatchWithEquipped();saveData();updateUI();
+  showToast(win?'🏆 Победа! +'+diaR+'💎':'💀 Поражение...',win?'#44ff88':'#ff4444',2000);
+});
 </script>
 </body>
 </html>
