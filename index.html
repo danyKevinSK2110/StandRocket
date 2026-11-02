@@ -1981,6 +1981,121 @@ fightBtn.addEventListener('click',function(){
   addMatchToHistory('bot',win);addMatchWithEquipped();saveData();updateUI();
   showToast(win?'🏆 Победа! +'+diaR+'💎':'💀 Поражение...',win?'#44ff88':'#ff4444',2000);
 });
+
+// --- МАГАЗИН И ИНВЕНТАРЬ ---
+buyNormalCaseBtn.addEventListener('click',function(){if(data.coins<250){showToast('⚠️ Нужно 250🪙!','#ff8844',2000);return;}data.coins-=250;saveData();updateUI();showToast('📦 Открываем Обычный ящик...','#ffd700',1500);runCaseAnimation('normal',1);});
+buyLegendaryCaseBtn.addEventListener('click',function(){if(data.coins<1500){showToast('⚠️ Нужно 1500🪙!','#ff8844',2000);return;}data.coins-=1500;saveData();updateUI();showToast('💎 Открываем Легендарный ящик...','#ff2244',1500);runCaseAnimation('legendary',1);});
+sellAllBtn.addEventListener('click',function(){
+  if(data.inventory.length===0){showToast('⚠️ Инвентарь пуст!','#ff8844',2000);return;}
+  var total=0;var keep=[];
+  for(var i=0;i<data.inventory.length;i++){
+    var item=data.inventory[i];var def=ITEMS[item.id||item.name]||item;
+    if(def.noSell){keep.push(item);continue;}
+    total+=Math.floor((getItemPrice(item.id||item.name)||10)*0.3);
+  }
+  data.inventory=keep;
+  if(data.equipped&&!keep.some(function(x){return (x.id||x.name)===data.equipped;}))data.equipped=null;
+  data.coins+=total;saveData();updateUI();
+  showToast('💰 Продано всё! +🪙'+total,'#ffd700',2000);
+});
+
+// --- НАСТРОЙКИ / ПРОМОКОДЫ ---
+promoApplyBtn.addEventListener('click',function(){
+  var code=promoInput.value.trim();
+  if(!code){promoStatus.textContent='⚠️ Введи код!';promoStatus.style.color='#ff8844';return;}
+  if(data.usedPromos.indexOf(code)!==-1){promoStatus.textContent='⚠️ Уже использован!';promoStatus.style.color='#ff8844';return;}
+  var p=PROMOCODES[code];
+  if(!p){promoStatus.textContent='❌ Неверный код!';promoStatus.style.color='#ff4444';return;}
+  if(p.coins)data.coins+=p.coins;
+  if(p.diamonds)data.diamonds=(data.diamonds||0)+p.diamonds;
+  if(p.xp)addXp(p.xp);
+  data.usedPromos.push(code);saveData();updateUI();
+  promoInput.value='';promoStatus.textContent='✅ Код принят!';promoStatus.style.color='#44ff88';
+  setTimeout(function(){promoStatus.textContent='';},4000);
+});
+
+// --- КОД АВТОРА (DEV) ---
+var authorData = JSON.parse(localStorage.getItem('sr_author_support') || 'null');
+function updateAuthorUI() {
+    var inputArea = document.getElementById('authorInputArea');
+    var supportArea = document.getElementById('authorSupporterArea');
+    if (!inputArea || !supportArea) return;
+    if (authorData) {
+        inputArea.style.display = 'none';
+        supportArea.classList.add('active');
+        document.getElementById('supporterNameDisplay').textContent = authorData.name;
+        document.getElementById('supporterDateDisplay').textContent = 'Связь активна до ' + authorData.date;
+    } else {
+        inputArea.style.display = 'block';
+        supportArea.classList.remove('active');
+    }
+}
+document.getElementById('standoffAuthorApply').addEventListener('click', function() {
+    var code = document.getElementById('standoffAuthorInput').value.trim();
+    if (code === 'DEV') { // Твой новый код автора!
+        var d = new Date(); d.setFullYear(d.getFullYear() + 1);
+        authorData = { name: 'DEV', date: d.toLocaleDateString('ru-RU') };
+        localStorage.setItem('sr_author_support', JSON.stringify(authorData));
+        document.getElementById('modalAuthorName').textContent = authorData.name;
+        document.getElementById('modalDate').textContent = authorData.date;
+        document.getElementById('modalSuccess').classList.add('active');
+    } else { showToast('❌ Неверный код!', '#ff4444', 2000); }
+});
+document.getElementById('btnSuccessOk').addEventListener('click', function() { document.getElementById('modalSuccess').classList.remove('active'); updateAuthorUI(); });
+document.getElementById('standoffAuthorStop').addEventListener('click', function() { if (authorData) { document.getElementById('modalStopName').textContent = authorData.name; document.getElementById('modalStop').classList.add('active'); } });
+document.getElementById('btnStopCancel').addEventListener('click', function() { document.getElementById('modalStop').classList.remove('active'); });
+document.getElementById('btnStopConfirm').addEventListener('click', function() { authorData = null; localStorage.removeItem('sr_author_support'); document.getElementById('modalStop').classList.remove('active'); updateAuthorUI(); showToast('❌ Поддержка прекращена', '#ff8844', 2000); });
+updateAuthorUI();
+
+// --- АДМИНКА И ОСТАЛЬНОЕ ---
+function openPasswordModal(){passwordModal.style.display='flex';passwordInput.value='';passError.textContent='';passwordInput.focus();}
+aboutGameBtn.addEventListener('click',openPasswordModal);
+passCancel.addEventListener('click',function(){passwordModal.style.display='none';});
+passEnter.addEventListener('click',function(){
+  if(passwordInput.value===ADMIN_PASSWORD){passwordModal.style.display='none';adminPanel.style.display='flex';fillAdminSelects();fillAdminFields();}
+  else{passError.textContent='❌ Неверный пароль!';passwordInput.value='';}
+});
+adminCloseBtn.addEventListener('click',function(){adminPanel.style.display='none';updateUI();});
+
+// Функции для админки (чтобы не было ошибок)
+function fillAdminSelects(){}
+function fillAdminFields(){}
+
+// Обработчики навигации по окнам
+sideIcons.forEach(function(icon){icon.addEventListener('click',function(){openWindow(this.getAttribute('data-window'));});});
+playBtn.addEventListener('click',function(){openWindow('modesWindow');sideIcons.forEach(function(i){i.classList.remove('active');});});
+profileBtn.addEventListener('click',function(){viewingProfile=null;openWindow('profileWindow');sideIcons.forEach(function(i){i.classList.remove('active');});renderProfile();});
+leadersBtn.addEventListener('click',function(){openWindow('leadersWindow');sideIcons.forEach(function(i){i.classList.remove('active');});renderLeaders();});
+achievementsBtn.addEventListener('click',function(){openWindow('achievementsWindow');sideIcons.forEach(function(i){i.classList.remove('active');});renderAchievements();});
+
+// Запуск игры (стартовое состояние)
+var gameRoot = document.getElementById('gameLayout');
+var loadingScreen = document.getElementById('loadingScreen');
+var loginScreen = document.getElementById('loginScreen');
+
+// Открытие главного окна после загрузки
+function openWindow(windowId){
+  document.querySelectorAll('.menu-window').forEach(function(w){w.classList.remove('active');});
+  document.querySelectorAll('.side-icon').forEach(function(i){i.classList.remove('active');});
+  var tw=document.getElementById(windowId);if(tw)tw.classList.add('active');
+  var ti=document.querySelector('.side-icon[data-window="'+windowId+'"]');if(ti)ti.classList.add('active');
+  if(windowId==='leadersWindow') renderLeaders();
+  if(windowId==='profileWindow') renderProfile();
+}
+
+// Кнопка Google
+var googleBtn = document.getElementById('googleBtn');
+if(googleBtn){
+    googleBtn.addEventListener('click', async () => {
+        document.getElementById('soonMessage').textContent = '🔄 Перенаправление...';
+        const { error } = await sb.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo: 'https://danyKevinSK2110.github.io/StandRocket/' }
+        });
+        if (error) document.getElementById('soonMessage').textContent = '❌ Ошибка: ' + error.message;
+    });
+}
+
 </script>
 </body>
 </html>
