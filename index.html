@@ -7,10 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>StandRocket V1.06 Online</title>
-
-<!-- ПОДКЛЮЧАЕМ SUPABASE ДЛЯ ОНЛАЙНА -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden;background:#0a0c12;font-family:Arial Black,sans-serif;touch-action:manipulation}
@@ -26,9 +23,9 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
 #loadingText{font-size:16px;color:#ff8844;font-family:Courier New,monospace;opacity:.7}
 #loginScreen h2{color:#ffaa44;font-size:30px;letter-spacing:2px;margin-bottom:10px}
 .login-btn{width:45%;min-width:300px;max-width:450px;padding:16px 0;border:none;border-radius:60px;font-size:19px;font-weight:bold;font-family:Arial Black,sans-serif;cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,.4)}
-.btn-google{background:#2a1a0a;color:#ff8844;border:2px solid #8a5a1a;opacity:.75}
-.btn-offline{background:linear-gradient(145deg,#ff8800,#cc6600);color:#fff;border:2px solid #ffaa44;box-shadow:0 8px 0 #663300}
-#soonMessage{color:#ff8800;font-size:17px;font-weight:bold;min-height:26px;font-family:Courier New,monospace}
+.btn-google{background:#2a1a0a;color:#ff8844;border:2px solid #8a5a1a;opacity:.75; display:flex; align-items:center; justify-content:center; gap:10px;}
+.btn-google:hover{opacity:1;}
+#soonMessage{color:#ff8800;font-size:17px;font-weight:bold;min-height:26px;font-family:Courier New,monospace; text-align:center;}
 #gameLayout{display:none;width:100%;height:100%;flex-direction:row;position:relative;overflow:hidden}
 #playerTopBar{position:absolute;top:0;left:70px;right:0;height:76px;display:flex;align-items:center;padding:6px 14px;gap:12px;background:linear-gradient(180deg,rgba(26,18,8,.98),rgba(26,18,8,.75));border-bottom:2px solid #8a5a1a;z-index:50}
 .player-avatar-box{cursor:pointer;flex-shrink:0}
@@ -504,7 +501,7 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
         <div class="player-info-block">
             <div class="player-info-row">
                 <span style="color:#88aacc; font-size:10px;">🆔</span>
-                <span class="id-text" id="idDisplay">Offline</span>
+                <span class="id-text" id="idDisplay">Загрузка...</span>
             </div>
             <div class="player-info-row">
                 <span class="clan-tag-inline" id="clanTagInline" style="display:none;">[TAG]</span>
@@ -536,7 +533,7 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
         </div>
     </div>
     <div id="contentArea">
-<div class="menu-window active" id="homeWindow">
+    <div class="menu-window active" id="homeWindow">
     <div class="main-menu-grid">
         <div class="ranks-block">
             <div class="ranks-block-title">🏆 РАНГ</div>
@@ -607,6 +604,7 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
         </div>
     </div>
 </div>
+
 <div class="menu-window" id="profileWindow">
     <div class="window-title">👤 Мой профиль</div>
     <div class="my-profile-layout">
@@ -624,7 +622,7 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
                             <span class="profile-nick-text" id="profileNick">Игрок</span>
                             <span class="profile-status online" id="profileStatus">● В игре</span>
                         </div>
-                        <div class="profile-id-row">🆔 ID: <span class="profile-id-value" id="profileId">Offline</span></div>
+                        <div class="profile-id-row">🆔 ID: <span class="profile-id-value" id="profileId">Загрузка</span></div>
                         <div class="profile-level-badge"><span>🏆</span><span id="profileLevel">Ур. 1</span></div>
                         <div class="player-medals-row" id="profileMedalsRow" style="margin-top:6px;">
                             <div class="medal-slot-mini empty" style="width:26px;height:26px;font-size:15px;"></div>
@@ -679,7 +677,6 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
         </div>
     </div>
 </div>
-
 <div class="menu-window" id="achievementsWindow">
     <div class="window-title">📝 Достижения</div>
     <div class="ach-tabs">
@@ -692,8 +689,9 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
         <button class="ach-tab-btn" data-ach-tab="secret">⚫ Секрет</button>
     </div>
     <div class="ach-tab-content" id="achievementsContent"></div>
-    </div>
-    <div id="editProfileScreen">
+</div>
+
+<div id="editProfileScreen">
     <div class="edit-profile-header">
         <button class="edit-profile-back" id="editProfileBackBtn">←</button>
         <span class="edit-profile-title">ИЗМЕНЕНИЕ ПРОФИЛЯ</span>
@@ -828,7 +826,6 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
 
 <div class="menu-window" id="settingsWindow">
     <div class="window-title">⚙️ Настройки</div>
-    
     <div class="settings-section">
         <div class="settings-label">🎟️ Промокоды:</div>
         <div class="promo-input-group">
@@ -837,7 +834,6 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
         </div>
         <div class="settings-status" id="promoStatus"></div>
     </div>
-
     <div class="settings-section">
         <div class="settings-label">👤 Поддержка автора:</div>
         <div class="author-section" id="authorBlock">
@@ -855,18 +851,15 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
             </div>
         </div>
     </div>
-
     <div class="settings-section">
         <div class="settings-label">📋 Мой ID:</div>
         <button class="promo-btn" id="copyIdBtn" style="width:100%;">📋 Скопировать мой ID</button>
         <div class="settings-status" id="copyIdStatus"></div>
     </div>
-    
     <div class="settings-section" id="timeMachineSection" style="display:none;">
         <div class="settings-label">🕰️ Машина времени:</div>
         <div style="text-align:center;"><div class="tm-circle" id="tmCircle">🕰️</div></div>
     </div>
-    
     <div class="settings-section">
         <div class="settings-label" id="aboutGameBtn" style="cursor:pointer; user-select:none;">ℹ️ О игре:</div>
         <div style="color:#ff8844; font-size:13px; font-family:'Courier New', monospace; text-align:center; padding:6px;">
@@ -874,6 +867,7 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
         </div>
     </div>
 </div>
+
 <div class="menu-window" id="leadersWindow">
     <div class="window-title">🏆 Лидеры (ТОП-200)</div>
     <div class="ach-tabs" style="margin-bottom:10px;">
@@ -887,7 +881,6 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
     </div>
     <div id="leadersList"></div>
 </div>
-
 <div class="clan-modal-overlay" id="clanCreateModal">
     <div class="clan-modal-box">
         <button class="clan-modal-close" id="clanCreateCloseBtn">✕</button>
@@ -984,6 +977,7 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
 </div>
 
 <div class="countdown-overlay" id="countdownOverlay"><div class="countdown-number" id="countdownNumber">5</div></div>
+
 <div id="clickerArena" style="display:none; position: absolute; top: 76px; left: 0; right: 0; bottom: 0; padding: 14px; overflow-y: auto; z-index: 95;">
     <div class="clicker-arena">
         <div class="clicker-header">
@@ -1013,7 +1007,6 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
         <button class="clicker-result-btn" id="clickerResultClose">В МЕНЮ</button>
     </div>
 </div>
-
 <div id="adminPanel">
     <div class="admin-header">
         <span class="admin-title">⭐ Админ-панель</span>
@@ -1106,6 +1099,7 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
         <div class="admin-status" id="adminStatus"></div>
     </div>
 </div>
+
 <div id="itemPopupModal">
     <div class="item-popup-box">
         <div class="item-popup-emoji" id="itemPopupEmoji">🔫</div>
@@ -1171,7 +1165,6 @@ body{display:flex;justify-content:center;align-items:center;position:fixed;top:0
 
 </div>
 </div>
-
 <script>
 // ==========================================
 // ИНИЦИАЛИЗАЦИЯ SUPABASE
@@ -1211,7 +1204,6 @@ async function initGame() {
         const { data: profile, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
         if (profile) {
             data = profile;
-            // Привязка полей базы к переменным игры
             data.playerId = profile.player_id;
             data.botWins = profile.bot_wins;
             data.rankedWins = profile.ranked_wins;
@@ -1228,7 +1220,6 @@ async function initGame() {
             data.usedPromos = profile.used_promos || [];
             data.adminChecks = profile.admin_checks || {};
             
-            // Логируем вход
             await sb.from('login_logs').insert({
                 profile_id: currentUser.id, player_id: data.player_id, nick: data.nick, user_agent: navigator.userAgent
             });
@@ -1237,7 +1228,7 @@ async function initGame() {
                 document.getElementById('loadingScreen').style.display = 'none';
                 document.getElementById('gameLayout').style.display = 'flex';
                 if (typeof updateUI === 'function') updateUI();
-                openWindow('homeWindow');
+                if (typeof openWindow === 'function') openWindow('homeWindow');
             }, 1000);
         }
     } else {
@@ -1248,7 +1239,7 @@ async function initGame() {
 initGame();
 
 // ==========================================
-// АВТОСОХРАНЕНИЕ
+// АВТОСОХРАНЕНИЕ (с заменой старой функции saveData)
 // ==========================================
 let saveTimeout = null;
 function saveData() {
@@ -1269,6 +1260,7 @@ function saveData() {
         }).eq('id', currentUser.id);
     }, 1000);
 }
+<script>
 // ==========================================
 // ВСЯ ТВОЯ ИГРОВАЯ ЛОГИКА (С СИНХРОНИЗАЦИЕЙ)
 // ==========================================
@@ -1409,7 +1401,7 @@ setInterval(function(){if(gameRoot&&gameRoot.style.display==='flex'){data.totalT
 
 var loadingScreen=$('loadingScreen'),loginScreen=$('loginScreen'),gameRoot=$('gameLayout'),adminPanel=$('adminPanel'),editProfileScreen=$('editProfileScreen'),rankedLobby=$('rankedLobby'),clickerArena=$('clickerArena'),clickerResultScreen=$('clickerResultScreen'),countdownOverlay=$('countdownOverlay');
 var loaderFill=$('loaderFill'),loadingPercent=$('loadingPercent'),loadingText=$('loadingText');
-var soonMessage=$('soonMessage'),googleBtn=$('googleBtn'),offlineBtn=$('offlineBtn');
+var soonMessage=$('soonMessage'),googleBtn=$('googleBtn');
 var nickDisplay=$('nickDisplay'),idDisplay=$('idDisplay'),clanTagInline=$('clanTagInline');
 var levelDisplay=$('levelDisplay'),xpDisplay=$('xpDisplay'),xpBarFill=$('xpBarFill');
 var titleDisplay=$('titleDisplay'),titleText=$('titleText');
@@ -1454,8 +1446,7 @@ var lobbyBackBtn=$('lobbyBackBtn'),lobbyLoading=$('lobbyLoading'),lobbyLoadingFi
 var createRoomBtn=$('createRoomBtn'),joinRoomBtn=$('joinRoomBtn'),roomNameInput=$('roomNameInput'),roomCreateConfirmBtn=$('roomCreateConfirmBtn'),roomJoinCodeInput=$('roomJoinCodeInput'),roomJoinConfirmBtn=$('roomJoinConfirmBtn'),roomWaitingName=$('roomWaitingName'),roomWaitingHint=$('roomWaitingHint'),roomSlot2=$('roomSlot2');
 var countdownNumber=$('countdownNumber');
 var clickerTimerFill=$('clickerTimerFill'),clickerTimerText=$('clickerTimerText'),clickerMyName=$('clickerMyName'),clickerBotName=$('clickerBotName'),clickerMyScore=$('clickerMyScore'),clickerBotScore=$('clickerBotScore'),clickerClickBtn=$('clickerClickBtn');
-var adminCloseBtn=$('adminCloseBtn'),checkGrid=$('checkGrid'),adminGiveCheckBtn=$('adminGiveCheckBtn'),adminNickInput=$('adminNickInput'),adminSetNick=$('adm
-    inSetNick'),adminIdInput=$('adminIdInput'),adminSetId=$('adminSetId'),adminVersionInput=$('adminVersionInput'),adminSetVersion=$('adminSetVersion');
+var adminCloseBtn=$('adminCloseBtn'),checkGrid=$('checkGrid'),adminGiveCheckBtn=$('adminGiveCheckBtn'),adminNickInput=$('adminNickInput'),adminSetNick=$('adminSetNick'),adminIdInput=$('adminIdInput'),adminSetId=$('adminSetId'),adminVersionInput=$('adminVersionInput'),adminSetVersion=$('adminSetVersion');
 var adminCoinsInput=$('adminCoinsInput'),adminAddCoins=$('adminAddCoins'),adminSubCoins=$('adminSubCoins'),adminDiamondsInput=$('adminDiamondsInput'),adminAddDiamonds=$('adminAddDiamonds'),adminSubDiamonds=$('adminSubDiamonds');
 var adminLevelInput=$('adminLevelInput'),adminAddLevel=$('adminAddLevel'),adminSubLevel=$('adminSubLevel'),adminXpInput=$('adminXpInput'),adminAddXp=$('adminAddXp'),adminSubXp=$('adminSubXp');
 var adminRankSelect=$('adminRankSelect'),adminMmrInput=$('adminMmrInput'),adminSetRankMmr=$('adminSetRankMmr'),adminStatusSelect=$('adminStatusSelect'),adminSetStatus=$('adminSetStatus');
@@ -1467,7 +1458,8 @@ var adminMyBotName=$('adminMyBotName'),adminMyBotLevel=$('adminMyBotLevel'),admi
 var selectedCheckType=1,activeAchTab='common',tempAvatar=null,tempClanAvatar=null,popupCurrentItem=null;
 var selectedDiff='easy',selectedClanMember=null,viewingProfile=null,currentRoom=null;
 var diffChances={easy:0.7,normal:0.5,hard:0.3};
-    function updateUI(){
+
+function updateUI(){
   nickDisplay.textContent=data.nick;
   idDisplay.textContent=data.playerId;
   levelDisplay.textContent='Ур. '+data.level;
@@ -1611,17 +1603,9 @@ function getItemPrice(id){
 function renderInventory(){
   if(data.inventory.length===0 && (!data.fragments || Object.keys(data.fragments).every(k => data.fragments[k] === 0))){inventoryGrid.innerHTML='';inventoryEmpty.style.display='block';}
   else { inventoryEmpty.style.display='none'; }
-  
   var html='';
   if(data.fragments){
-    var fragsMap = {
-      'common': { name:'⚪ Обычный', emoji:'🧩', color:'#888' },
-      'rare': { name:'🔵 Редкий', emoji:'🧩', color:'#4488ff' },
-      'epic': { name:'🟣 Эпик', emoji:'🧩', color:'#aa44ff' },
-      'legendary': { name:'🟠 Легендарный', emoji:'🧩', color:'#ff8800' },
-      'arcane': { name:'🔴 Аркана', emoji:'🧩', color:'#ff2244' },
-      'nemeless': { name:'🟡 Немелесс', emoji:'🧩', color:'#ffdd00' }
-    };
+    var fragsMap = {'common':{name:'⚪ Обычный',emoji:'🧩',color:'#888'},'rare':{name:'🔵 Редкий',emoji:'🧩',color:'#4488ff'},'epic':{name:'🟣 Эпик',emoji:'🧩',color:'#aa44ff'},'legendary':{name:'🟠 Легендарный',emoji:'🧩',color:'#ff8800'},'arcane':{name:'🔴 Аркана',emoji:'🧩',color:'#ff2244'},'nemeless':{name:'🟡 Немелесс',emoji:'🧩',color:'#ffdd00'}};
     for (var rar in data.fragments) {
       if (data.fragments[rar] > 0 && fragsMap[rar]) {
         var f = fragsMap[rar];
@@ -1641,28 +1625,18 @@ function renderInventory(){
   for(var c=0;c<cells.length;c++){(function(cell){cell.addEventListener('click',function(){openItemPopup(this.getAttribute('data-item'));});})(cells[c]);}
 }
 window.openFragmentPopup = function(rarity) {
-  var fragsMap = {
-      'common': { name:'Обычный', emoji:'⚪' },
-      'rare': { name:'Редкий', emoji:'🔵' },
-      'epic': { name:'Эпический', emoji:'🟣' },
-      'legendary': { name:'Легендарный', emoji:'🟠' },
-      'arcane': { name:'Аркана', emoji:'🔴' },
-      'nemeless': { name:'Немелесс', emoji:'🟡' }
-  };
+  var fragsMap = {'common':{name:'Обычный',emoji:'⚪'},'rare':{name:'Редкий',emoji:'🔵'},'epic':{name:'Эпический',emoji:'🟣'},'legendary':{name:'Легендарный',emoji:'🟠'},'arcane':{name:'Аркана',emoji:'🔴'},'nemeless':{name:'Немелесс',emoji:'🟡'}};
   var count = data.fragments[rarity] || 0;
   var f = fragsMap[rarity];
-  
   itemPopupEmoji.textContent = '🧩';
   itemPopupName.textContent = 'Фрагмент: ' + f.name;
   itemPopupRarity.textContent = count + ' / 10 шт.';
   itemPopupRarity.className = 'item-popup-rarity ' + rarity;
   itemPopupCount.textContent = 'Соберите 10 штук, чтобы открыть предмет.';
-  
   itemPopupEquipBtn.style.display = 'none';
   itemPopupSellBtn.style.display = 'flex';
   itemPopupSellBtn.textContent = '🎁 ОТКРЫТЬ ПРЕДМЕТ';
   itemPopupSellBtn.className = 'item-popup-btn equip';
-  
   if (count >= 10) {
     itemPopupSellBtn.disabled = false;
     itemPopupSellBtn.onclick = function() {
@@ -1683,7 +1657,6 @@ window.openFragmentPopup = function(rarity) {
   }
   itemPopupModal.classList.add('active');
 };
-
 function openItemPopup(itemKey){
   var items=[];for(var i=0;i<data.inventory.length;i++){if((data.inventory[i].id||data.inventory[i].name)===itemKey)items.push(data.inventory[i]);}
   if(items.length===0)return;
@@ -1698,13 +1671,10 @@ function openItemPopup(itemKey){
   itemPopupEquipBtn.style.display = 'flex';
   itemPopupSellBtn.style.display = 'flex';
   itemPopupSellBtn.className = 'item-popup-btn sell';
-  
   if(isEq){itemPopupEquipBtn.textContent='🔄 СНЯТЬ';itemPopupEquipBtn.className='item-popup-btn unequip';}
   else{itemPopupEquipBtn.textContent='🎯 НАДЕТЬ';itemPopupEquipBtn.className='item-popup-btn equip';}
-  
   if(itemDef.noSell)itemPopupSellBtn.style.display='none';
   else{var sp=Math.floor((getItemPrice(itemKey)||10)*0.3);itemPopupSellBtn.textContent='💰 Продать 🪙 '+sp;}
-  
   itemPopupSellBtn.onclick = function() {
       if(!popupCurrentItem)return;
       var idx=-1;for(var i=0;i<data.inventory.length;i++){if((data.inventory[i].id||data.inventory[i].name)===popupCurrentItem){idx=i;break;}}
@@ -1843,7 +1813,6 @@ for(var _p=0;_p<profileNavBtns.length;_p++){(function(btn){btn.addEventListener(
   if(t==='history')$('profileHistory').classList.add('active');
   if(viewingProfile)renderProfileFromViewing();else renderProfile();
 });})(profileNavBtns[_p]);}
-
 function renderMyBotBlock(){
   var empty=$('myBotEmpty'),info=$('myBotInfo');
   if(!empty||!info)return;
@@ -1860,93 +1829,64 @@ function renderAdminMyBot(){
   adminMyBotStatus.textContent='✅ '+b.name+' · Ур. '+b.level+' · '+b.mmr+' ММР (в клане)';
   adminMyBotStatus.style.color='#44ff88';
 }
-adminCreateMyBot.addEventListener('click',function(){
-  if(!data.myClan){ showToast('❌ Извините, у вас нет клана. Создайте или войдите!','#ff4444',3000); return; }
-  var name=adminMyBotName.value.trim()||('MyBot_'+Math.floor(Math.random()*999));
-  var lvl=parseInt(adminMyBotLevel.value)||50;
-  var mmr=parseInt(adminMyBotMmr.value)||1000;
-  var rk=adminMyBotRank.value||'member';
-  lvl=Math.max(1,Math.min(600,lvl));mmr=Math.max(0,mmr);
-
-  if(data.myClan.members.length >= data.myClan.limit){
-    showToast('❌ В клане нет места, расширьте лимит!','#ff4444',3000); return;
-  }
-
-  var newBot = {name:name, level:lvl, mmr:mmr, rank:rk, isBot:true, status:'online', statusText:'В сети', joinedAt:Date.now(), avatar:null, items:generateBotItems()};
-  data.myBots=[newBot];
-  data.myClan.members.push(newBot);
-
-  saveData(); renderAdminMyBot(); renderMyClanFull(); renderMyClanMembers();
-  showToast('✅ Бот '+name+' создан и добавлен в клан!','#44ff88',2500);
-});
-adminDeleteMyBot.addEventListener('click',function(){
-  if(!data.myBots||data.myBots.length===0){showToast('⚠️ Нет бота','#ff8844',2000);return;}
-  if(data.myClan){
-    data.myClan.members = data.myClan.members.filter(function(m){return m.name !== data.myBots[0].name;});
-  }
-  data.myBots=[];saveData();renderAdminMyBot();renderMyBotBlock();renderMyClanFull();renderMyClanMembers();
-  showToast('🗑️ Бот удалён','#ff8844',2000);
-});
-
-function getRandomOnlineTime(){var r=Math.random();if(r<0.4)return{status:'online',text:'В сети'};if(r<0.7){var s=30+Math.floor(Math.random()*270);return{status:'away',text:'Был(а) '+Math.floor(s/60)+' мин назад'};}var secs=300+Math.floor(Math.random()*604500);var min=Math.floor(secs/60);var hrs=Math.floor(min/60);var days=Math.floor(hrs/24);var text=days>0?days+' дн. назад':hrs>0?hrs+' ч. назад':min+' мин. назад';return{status:'offline',text:'Был(а) '+text};}
+// ============ КЛАНЫ ============
 function generateBotItems(){
   var ids=[];for(var k in ITEMS){if(ITEMS.hasOwnProperty(k)&&k!=='TM')ids.push(k);}
   var count=1+Math.floor(Math.random()*3);ids.sort(function(){return Math.random()-0.5;});
   var res={};for(var i=0;i<count;i++){res[ids[i]]=1+Math.floor(Math.random()*30);}return res;
 }
 function generateBot(){
-  var name=BOT_NAMES[Math.floor(Math.random()*BOT_NAMES.length)];var on=getRandomOnlineTime();
+  var name=BOT_NAMES[Math.floor(Math.random()*BOT_NAMES.length)];var on={status:'online',text:'В сети'};
   return{name:name,rank:'member',isBot:true,status:on.status,statusText:on.text,joinedAt:Date.now()-Math.floor(Math.random()*86400000*30),avatar:null,mmr:500+Math.floor(Math.random()*1500),level:1+Math.floor(Math.random()*100),items:generateBotItems()};
 }
-
-// === ЛИДЕРЫ ТОП-200 (ИЗ БАЗЫ) ===
+// Онлайн ТОП-200
 var currentLeaderTab = 'mmr';
 async function renderLeaders() {
-    var list = $('leadersList'); if (!list) return;
-    list.innerHTML = '<div style="color:#ff8844;text-align:center;padding:20px;font-family:\'Courier New\',monospace;">Загрузка из облака...</div>';
+  var list = $('leadersList'); if (!list) return;
+  list.innerHTML = '<div style="color:#ff8844;text-align:center;padding:20px;font-family:\'Courier New\',monospace;">Загрузка из облака...</div>';
+  
+  var col = currentLeaderTab === 'mmr' ? 'mmr' : currentLeaderTab === 'coins' ? 'coins' : currentLeaderTab === 'diamonds' ? 'diamonds' : 'level';
+  var { data: top, error } = await sb.from('profiles').select('*').order(col, { ascending: false }).limit(200);
+
+  if (error || !top) { list.innerHTML = '<div style="color:#ff4444;text-align:center;padding:20px;">Ошибка загрузки</div>'; return; }
+
+  var header = $('leadersHeader');
+  if (currentLeaderTab === 'mmr') header.innerHTML = '<span>#</span><span>Игрок</span><span style="text-align:center;">Ранг</span><span style="text-align:right;">ММР</span>';
+  else if (currentLeaderTab === 'coins') header.innerHTML = '<span>#</span><span>Игрок</span><span style="text-align:center;">Ур.</span><span style="text-align:right;">Монеты</span>';
+  else if (currentLeaderTab === 'diamonds') header.innerHTML = '<span>#</span><span>Игрок</span><span style="text-align:center;">Ур.</span><span style="text-align:right;">Алмазы</span>';
+  else if (currentLeaderTab === 'level') header.innerHTML = '<span>#</span><span>Игрок</span><span style="text-align:center;">Клан</span><span style="text-align:right;">Уровень</span>';
+
+  var html = '';
+  for (var j = 0; j < top.length; j++) {
+    var p = top[j];
+    var place = j === 0 ? '🥇' : j === 1 ? '🥈' : j === 2 ? '🥉' : (j + 1);
+    var av = p.avatar ? '<img src="' + p.avatar + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">' : '👤';
+    var isMe = currentUser && p.id === currentUser.id;
+    var ms = isMe ? 'border:1px solid #44ff88;background:rgba(68,255,136,0.1);' : '';
+    var rightCol1 = ''; var rightCol2 = '';
     
-    var col = currentLeaderTab === 'mmr' ? 'mmr' : currentLeaderTab === 'coins' ? 'coins' : currentLeaderTab === 'diamonds' ? 'diamonds' : 'level';
-    var { data: top, error } = await sb.from('profiles').select('*').order(col, { ascending: false }).limit(200);
-
-    if (error || !top) { list.innerHTML = '<div style="color:#ff4444;text-align:center;padding:20px;">Ошибка загрузки</div>'; return; }
-
-    var header = $('leadersHeader');
-    if (currentLeaderTab === 'mmr') header.innerHTML = '<span>#</span><span>Игрок</span><span style="text-align:center;">Ранг</span><span style="text-align:right;">ММР</span>';
-    else if (currentLeaderTab === 'coins') header.innerHTML = '<span>#</span><span>Игрок</span><span style="text-align:center;">Ур.</span><span style="text-align:right;">Монеты</span>';
-    else if (currentLeaderTab === 'diamonds') header.innerHTML = '<span>#</span><span>Игрок</span><span style="text-align:center;">Ур.</span><span style="text-align:right;">Алмазы</span>';
-    else if (currentLeaderTab === 'level') header.innerHTML = '<span>#</span><span>Игрок</span><span style="text-align:center;">Клан</span><span style="text-align:right;">Уровень</span>';
-
-    var html = '';
-    for (var j = 0; j < top.length; j++) {
-        var p = top[j];
-        var place = j === 0 ? '🥇' : j === 1 ? '🥈' : j === 2 ? '🥉' : (j + 1);
-        var av = p.avatar ? '<img src="' + p.avatar + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">' : '👤';
-        var isMe = p.id === currentUser.id;
-        var ms = isMe ? 'border:1px solid #44ff88;background:rgba(68,255,136,0.1);' : '';
-        var rightCol1 = ''; var rightCol2 = '';
-        
-        if (currentLeaderTab === 'mmr') {
-            var rank = getRankObjByMmr(p.mmr);
-            rightCol1 = '<span style="text-align:center;color:#ff8800;font-size:12px;font-family:\'Arial Black\',sans-serif;">' + rank.emoji + ' ' + rank.name + '</span>';
-            rightCol2 = '<span style="text-align:right;color:#ffd700;font-weight:bold;font-family:\'Courier New\',monospace;">' + p.mmr + '</span>';
-        } else if (currentLeaderTab === 'coins') {
-            rightCol1 = '<span style="text-align:center;color:#888;font-size:12px;">Ур. ' + p.level + '</span>';
-            rightCol2 = '<span style="text-align:right;color:#ffd700;font-weight:bold;font-family:\'Courier New\',monospace;">🪙 ' + p.coins + '</span>';
-        } else if (currentLeaderTab === 'diamonds') {
-            rightCol1 = '<span style="text-align:center;color:#888;font-size:12px;">Ур. ' + p.level + '</span>';
-            rightCol2 = '<span style="text-align:right;color:#44ddff;font-weight:bold;font-family:\'Courier New\',monospace;">💎 ' + p.diamonds + '</span>';
-        } else if (currentLeaderTab === 'level') {
-            rightCol1 = '<span style="text-align:center;color:#888;font-size:12px;font-family:\'Courier New\',monospace;">—</span>';
-            rightCol2 = '<span style="text-align:right;color:#ffaa44;font-weight:bold;font-family:\'Courier New\',monospace;">Ур. ' + p.level + '</span>';
-        }
-        
-        html += '<div class="clan-list-row" style="grid-template-columns:40px 1fr 100px 80px;' + ms + '">' +
-       '<span style="color:#ffd700;font-weight:bold;font-family:\'Courier New\',monospace;">' + place + '</span>' +
-            '<div style="display:flex;align-items:center;gap:8px;min-width:0;">' + av + 
-            '<span style="color:#fff;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + p.nick + (isMe ? ' (Ты)' : '') + '</span></div>' +
-            rightCol1 + rightCol2 + '</div>';
+    if (currentLeaderTab === 'mmr') {
+        var rank = getRankObjByMmr(p.mmr);
+        rightCol1 = '<span style="text-align:center;color:#ff8800;font-size:12px;font-family:\'Arial Black\',sans-serif;">' + rank.emoji + ' ' + rank.name + '</span>';
+        rightCol2 = '<span style="text-align:right;color:#ffd700;font-weight:bold;font-family:\'Courier New\',monospace;">' + p.mmr + '</span>';
+    } else if (currentLeaderTab === 'coins') {
+        rightCol1 = '<span style="text-align:center;color:#888;font-size:12px;">Ур. ' + p.level + '</span>';
+        rightCol2 = '<span style="text-align:right;color:#ffd700;font-weight:bold;font-family:\'Courier New\',monospace;">🪙 ' + p.coins + '</span>';
+    } else if (currentLeaderTab === 'diamonds') {
+        rightCol1 = '<span style="text-align:center;color:#888;font-size:12px;">Ур. ' + p.level + '</span>';
+        rightCol2 = '<span style="text-align:right;color:#44ddff;font-weight:bold;font-family:\'Courier New\',monospace;">💎 ' + p.diamonds + '</span>';
+    } else if (currentLeaderTab === 'level') {
+        rightCol1 = '<span style="text-align:center;color:#888;font-size:12px;font-family:\'Courier New\',monospace;">—</span>';
+        rightCol2 = '<span style="text-align:right;color:#ffaa44;font-weight:bold;font-family:\'Courier New\',monospace;">Ур. ' + p.level + '</span>';
     }
-    list.innerHTML = html;
+    
+    html += '<div class="clan-list-row" style="grid-template-columns:40px 1fr 100px 80px;' + ms + '">' +
+        '<span style="color:#ffd700;font-weight:bold;font-family:\'Courier New\',monospace;">' + place + '</span>' +
+        '<div style="display:flex;align-items:center;gap:8px;min-width:0;">' + av + 
+        '<span style="color:#fff;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + p.nick + (isMe ? ' (Ты)' : '') + '</span></div>' +
+        rightCol1 + rightCol2 + '</div>';
+  }
+  list.innerHTML = html;
 }
 var leaderTabBtns = document.querySelectorAll('.leader-tab-btn');
 for (var _lt = 0; _lt < leaderTabBtns.length; _lt++) {
@@ -1959,8 +1899,7 @@ for (var _lt = 0; _lt < leaderTabBtns.length; _lt++) {
         });
     })(leaderTabBtns[_lt]);
 }
-
-// ОСТАЛЬНАЯ ЛОГИКА БОЯ И КЛАНОВ
+// ============ БОЙ ============
 for(var _d=0;_d<diffBtns.length;_d++){(function(btn){btn.addEventListener('click',function(){
   for(var k=0;k<diffBtns.length;k++)diffBtns[k].classList.remove('active');
   this.classList.add('active');selectedDiff=this.getAttribute('data-diff');
@@ -1981,121 +1920,65 @@ fightBtn.addEventListener('click',function(){
   addMatchToHistory('bot',win);addMatchWithEquipped();saveData();updateUI();
   showToast(win?'🏆 Победа! +'+diaR+'💎':'💀 Поражение...',win?'#44ff88':'#ff4444',2000);
 });
-
-// --- МАГАЗИН И ИНВЕНТАРЬ ---
-buyNormalCaseBtn.addEventListener('click',function(){if(data.coins<250){showToast('⚠️ Нужно 250🪙!','#ff8844',2000);return;}data.coins-=250;saveData();updateUI();showToast('📦 Открываем Обычный ящик...','#ffd700',1500);runCaseAnimation('normal',1);});
-buyLegendaryCaseBtn.addEventListener('click',function(){if(data.coins<1500){showToast('⚠️ Нужно 1500🪙!','#ff8844',2000);return;}data.coins-=1500;saveData();updateUI();showToast('💎 Открываем Легендарный ящик...','#ff2244',1500);runCaseAnimation('legendary',1);});
-sellAllBtn.addEventListener('click',function(){
-  if(data.inventory.length===0){showToast('⚠️ Инвентарь пуст!','#ff8844',2000);return;}
-  var total=0;var keep=[];
-  for(var i=0;i<data.inventory.length;i++){
-    var item=data.inventory[i];var def=ITEMS[item.id||item.name]||item;
-    if(def.noSell){keep.push(item);continue;}
-    total+=Math.floor((getItemPrice(item.id||item.name)||10)*0.3);
-  }
-  data.inventory=keep;
-  if(data.equipped&&!keep.some(function(x){return (x.id||x.name)===data.equipped;}))data.equipped=null;
-  data.coins+=total;saveData();updateUI();
-  showToast('💰 Продано всё! +🪙'+total,'#ffd700',2000);
-});
-
-// --- НАСТРОЙКИ / ПРОМОКОДЫ ---
-promoApplyBtn.addEventListener('click',function(){
-  var code=promoInput.value.trim();
-  if(!code){promoStatus.textContent='⚠️ Введи код!';promoStatus.style.color='#ff8844';return;}
-  if(data.usedPromos.indexOf(code)!==-1){promoStatus.textContent='⚠️ Уже использован!';promoStatus.style.color='#ff8844';return;}
-  var p=PROMOCODES[code];
-  if(!p){promoStatus.textContent='❌ Неверный код!';promoStatus.style.color='#ff4444';return;}
-  if(p.coins)data.coins+=p.coins;
-  if(p.diamonds)data.diamonds=(data.diamonds||0)+p.diamonds;
-  if(p.xp)addXp(p.xp);
-  data.usedPromos.push(code);saveData();updateUI();
-  promoInput.value='';promoStatus.textContent='✅ Код принят!';promoStatus.style.color='#44ff88';
-  setTimeout(function(){promoStatus.textContent='';},4000);
-});
-
-// --- КОД АВТОРА (DEV) ---
-var authorData = JSON.parse(localStorage.getItem('sr_author_support') || 'null');
-function updateAuthorUI() {
-    var inputArea = document.getElementById('authorInputArea');
-    var supportArea = document.getElementById('authorSupporterArea');
-    if (!inputArea || !supportArea) return;
-    if (authorData) {
-        inputArea.style.display = 'none';
-        supportArea.classList.add('active');
-        document.getElementById('supporterNameDisplay').textContent = authorData.name;
-        document.getElementById('supporterDateDisplay').textContent = 'Связь активна до ' + authorData.date;
-    } else {
-        inputArea.style.display = 'block';
-        supportArea.classList.remove('active');
-    }
-}
-document.getElementById('standoffAuthorApply').addEventListener('click', function() {
-    var code = document.getElementById('standoffAuthorInput').value.trim();
-    if (code === 'DEV') { // Твой новый код автора!
-        var d = new Date(); d.setFullYear(d.getFullYear() + 1);
-        authorData = { name: 'DEV', date: d.toLocaleDateString('ru-RU') };
-        localStorage.setItem('sr_author_support', JSON.stringify(authorData));
-        document.getElementById('modalAuthorName').textContent = authorData.name;
-        document.getElementById('modalDate').textContent = authorData.date;
-        document.getElementById('modalSuccess').classList.add('active');
-    } else { showToast('❌ Неверный код!', '#ff4444', 2000); }
-});
-document.getElementById('btnSuccessOk').addEventListener('click', function() { document.getElementById('modalSuccess').classList.remove('active'); updateAuthorUI(); });
-document.getElementById('standoffAuthorStop').addEventListener('click', function() { if (authorData) { document.getElementById('modalStopName').textContent = authorData.name; document.getElementById('modalStop').classList.add('active'); } });
-document.getElementById('btnStopCancel').addEventListener('click', function() { document.getElementById('modalStop').classList.remove('active'); });
-document.getElementById('btnStopConfirm').addEventListener('click', function() { authorData = null; localStorage.removeItem('sr_author_support'); document.getElementById('modalStop').classList.remove('active'); updateAuthorUI(); showToast('❌ Поддержка прекращена', '#ff8844', 2000); });
-updateAuthorUI();
-
-// --- АДМИНКА И ОСТАЛЬНОЕ ---
-function openPasswordModal(){passwordModal.style.display='flex';passwordInput.value='';passError.textContent='';passwordInput.focus();}
-aboutGameBtn.addEventListener('click',openPasswordModal);
+// === АДМИНКА (компактная) ===
+aboutGameBtn.addEventListener('click',function(){passwordModal.style.display='flex';});
 passCancel.addEventListener('click',function(){passwordModal.style.display='none';});
 passEnter.addEventListener('click',function(){
-  if(passwordInput.value===ADMIN_PASSWORD){passwordModal.style.display='none';adminPanel.style.display='flex';fillAdminSelects();fillAdminFields();}
-  else{passError.textContent='❌ Неверный пароль!';passwordInput.value='';}
+  if(passwordInput.value===ADMIN_PASSWORD){passwordModal.style.display='none';adminPanel.style.display='flex';}
+  else{passError.textContent='❌ Неверный пароль!';}
 });
 adminCloseBtn.addEventListener('click',function(){adminPanel.style.display='none';updateUI();});
-
-// Функции для админки (чтобы не было ошибок)
-function fillAdminSelects(){}
-function fillAdminFields(){}
-
-// Обработчики навигации по окнам
-sideIcons.forEach(function(icon){icon.addEventListener('click',function(){openWindow(this.getAttribute('data-window'));});});
-playBtn.addEventListener('click',function(){openWindow('modesWindow');sideIcons.forEach(function(i){i.classList.remove('active');});});
-profileBtn.addEventListener('click',function(){viewingProfile=null;openWindow('profileWindow');sideIcons.forEach(function(i){i.classList.remove('active');});renderProfile();});
-leadersBtn.addEventListener('click',function(){openWindow('leadersWindow');sideIcons.forEach(function(i){i.classList.remove('active');});renderLeaders();});
-achievementsBtn.addEventListener('click',function(){openWindow('achievementsWindow');sideIcons.forEach(function(i){i.classList.remove('active');});renderAchievements();});
-
-// Запуск игры (стартовое состояние)
-var gameRoot = document.getElementById('gameLayout');
-var loadingScreen = document.getElementById('loadingScreen');
-var loginScreen = document.getElementById('loginScreen');
-
-// Открытие главного окна после загрузки
+adminAddCoins.addEventListener('click',function(){var v=parseInt(adminCoinsInput.value)||0;data.coins+=v;saveData();updateUI();});
+adminAddDiamonds.addEventListener('click',function(){var v=parseInt(adminDiamondsInput.value)||0;data.diamonds+=v;saveData();updateUI();});
+adminSetNick.addEventListener('click',function(){var v=adminNickInput.value.trim();if(v){data.nick=v;saveData();updateUI();}});
+adminSetId.addEventListener('click',function(){var v=adminIdInput.value.trim();if(v){data.playerId=v;saveData();updateUI();}});
+// Автор
+var authorData = JSON.parse(localStorage.getItem('sr_author_support') || 'null');
+function updateAuthorUI(){var ia=document.getElementById('authorInputArea'),sa=document.getElementById('authorSupporterArea');if(!ia||!sa)return;
+  if(authorData){ia.style.display='none';sa.classList.add('active');document.getElementById('supporterNameDisplay').textContent=authorData.name;document.getElementById('supporterDateDisplay').textContent='Связь активна до '+authorData.date;}
+  else{ia.style.display='block';sa.classList.remove('active');}}
+document.getElementById('standoffAuthorApply').addEventListener('click',function(){
+  var code=document.getElementById('standoffAuthorInput').value.trim();
+  if(code==='DEV'){var d=new Date();d.setFullYear(d.getFullYear()+1);
+    authorData={name:'DEV',date:d.toLocaleDateString('ru-RU')};
+    localStorage.setItem('sr_author_support',JSON.stringify(authorData));
+    document.getElementById('modalAuthorName').textContent='DEV';document.getElementById('modalDate').textContent=authorData.date;
+    document.getElementById('modalSuccess').classList.add('active');
+  }else{showToast('❌ Неверный код!','#ff4444',2000);}
+});
+document.getElementById('btnSuccessOk').addEventListener('click',function(){document.getElementById('modalSuccess').classList.remove('active');updateAuthorUI();});
+document.getElementById('standoffAuthorStop').addEventListener('click',function(){if(authorData){document.getElementById('modalStopName').textContent=authorData.name;document.getElementById('modalStop').classList.add('active');}});
+document.getElementById('btnStopCancel').addEventListener('click',function(){document.getElementById('modalStop').classList.remove('active');});
+document.getElementById('btnStopConfirm').addEventListener('click',function(){authorData=null;localStorage.removeItem('sr_author_support');document.getElementById('modalStop').classList.remove('active');updateAuthorUI();});
+updateAuthorUI();
+// Навигация
 function openWindow(windowId){
-  document.querySelectorAll('.menu-window').forEach(function(w){w.classList.remove('active');});
-  document.querySelectorAll('.side-icon').forEach(function(i){i.classList.remove('active');});
+  allWindows.forEach(function(w){w.classList.remove('active');});
+  sideIcons.forEach(function(i){i.classList.remove('active');});
   var tw=document.getElementById(windowId);if(tw)tw.classList.add('active');
   var ti=document.querySelector('.side-icon[data-window="'+windowId+'"]');if(ti)ti.classList.add('active');
-  if(windowId==='leadersWindow') renderLeaders();
-  if(windowId==='profileWindow') renderProfile();
+  if(windowId!=='profileWindow')viewingProfile=null;
+  if(windowId==='homeWindow')renderRank();
+  if(windowId==='inventoryWindow')renderInventory();
+  if(windowId==='marketWindow')renderMarket();
+  if(windowId==='achievementsWindow')renderAchievements();
+  if(windowId==='leadersWindow')renderLeaders();
+  if(windowId==='profileWindow'){renderTitleSelector();if(viewingProfile)renderProfileFromViewing();else renderProfile();}
 }
-
-// Кнопка Google
-var googleBtn = document.getElementById('googleBtn');
-if(googleBtn){
-    googleBtn.addEventListener('click', async () => {
-        document.getElementById('soonMessage').textContent = '🔄 Перенаправление...';
-        const { error } = await sb.auth.signInWithOAuth({
-            provider: 'google',
-            options: { redirectTo: 'https://danyKevinSK2110.github.io/StandRocket/' }
-        });
-        if (error) document.getElementById('soonMessage').textContent = '❌ Ошибка: ' + error.message;
-    });
-}
-
+sideIcons.forEach(function(icon){icon.addEventListener('click',function(){openWindow(this.getAttribute('data-window'));});});
+playBtn.addEventListener('click',function(){openWindow('modesWindow');});
+achievementsBtn.addEventListener('click',function(){openWindow('achievementsWindow');});
+leadersBtn.addEventListener('click',function(){openWindow('leadersWindow');});
+profileBtn.addEventListener('click',function(){viewingProfile=null;openWindow('profileWindow');renderProfile();});
+profileNavBtns.forEach(function(btn){btn.addEventListener('click',function(){
+  profileNavBtns.forEach(function(b){b.classList.remove('active');});this.classList.add('active');
+  profilePanes.forEach(function(p){p.classList.remove('active');});
+  var t=this.getAttribute('data-profile-tab');
+  if(t==='general')$('profileGeneral').classList.add('active');
+  if(t==='detailed')$('profileDetailed').classList.add('active');
+  if(t==='history')$('profileHistory').classList.add('active');
+});});
+})();
 </script>
 </body>
 </html>
