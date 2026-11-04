@@ -1194,35 +1194,85 @@ document.getElementById('googleBtn').addEventListener('click', async () => {
 // ЗАГРУЗКА ПРОФИЛЯ И СИНХРОНИЗАЦИЯ
 // ==========================================
 async function initGame() {
+    // Получаем сессию (авторизован ли пользователь)
     const { data: { session } } = await sb.auth.getSession();
+    
     if (session) {
+        // Если авторизован — показываем загрузку
         currentUser = session.user;
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('loadingScreen').style.display = 'flex';
-        document.getElementById('loadingText').textContent = 'Синхронизация...';
+        document.getElementById('loadingText').textContent = 'Загрузка профиля...';
 
-        const { data: profile, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+        // Ищем профиль в базе
+        let { data: profile, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+
+        // Если профиля нет — создаем его!
+        if (!profile) {
+            const { data: newProfile } = await sb.from('profiles').insert({
+                id: currentUser.id,
+                player_id: Math.floor(Math.random() * 9000000) + 1000000,
+                nick: currentUser.user_metadata?.full_name || 'Игрок',
+                coins: 100,
+                diamonds: 0,
+                level: 1,
+                xp: 0,
+                wins: 0,
+                losses: 0,
+                mmr: 0
+            }).select().single();
+            profile = newProfile;
+        }
+
+        // Если профиль найден (или создан) — запускаем игру
         if (profile) {
             data = profile;
             data.playerId = profile.player_id;
-            data.botWins = profile.bot_wins;
-            data.rankedWins = profile.ranked_wins;
-            data.calibrationGames = profile.calibration_games;
-            data.calibrationDone = profile.calibration_done;
-            data.maxMmr = profile.max_mmr;
-            data.totalTime = profile.total_time;
-            data.equippedFrame = profile.equipped_frame;
-            data.selectedTitle = profile.selected_title;
-            data.showTitle = profile.show_title;
+            data.botWins = profile.bot_wins || 0;
+            data.rankedWins = profile.ranked_wins || 0;
+            data.calibrationGames = profile.calibration_games || 0;
+            data.calibrationDone = profile.calibration_done || false;
+            data.maxMmr = profile.max_mmr || 0;
+            data.totalTime = profile.total_time || 0;
+            data.equippedFrame = profile.equipped_frame || null;
+            data.selectedTitle = profile.selected_title || null;
+            data.showTitle = profile.show_title || false;
             data.completedAchievements = profile.completed_achievements || [];
             data.inventory = profile.inventory || [];
             data.fragments = profile.fragments || {common:0,rare:0,epic:0,legendary:0,arcane:0,nemeless:0};
             data.usedPromos = profile.used_promos || [];
             data.adminChecks = profile.admin_checks || {};
             
+            // Логируем вход
             await sb.from('login_logs').insert({
-                profile_id: currentUser.id, player_id: data.player_id, nick: data.nick, user_agent: navigator.userAgent
+                profile_id: currentUser.id, 
+                player_id: data.player_id, 
+                nick: data.nick, 
+                user_agent: navigator.userAgent
             });
+
+            // Запускаем игру
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('gameLayout').style.display = 'flex';
+                if (typeof updateUI === 'function') updateUI();
+                if (typeof openWindow === 'function') openWindow('homeWindow');
+            }, 1000);
+        } else {
+            // Если что-то пошло не так — показываем ошибку
+            document.getElementById('loadingText').textContent = 'Ошибка загрузки профиля!';
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('loginScreen').style.display = 'flex';
+            }, 2000);
+        }
+    } else {
+        // Если не авторизован — показываем кнопку входа
+        document.getElementById('loadingScreen').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
+    }
+}
+initGame();
 
             setTimeout(() => {
                 document.getElementById('loadingScreen').style.display = 'none';
